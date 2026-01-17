@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Indian Crypto Tax & Investment Planner</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="app-header">
+      <div>
+        <h1>Indian Crypto Tax & Investment Planner</h1>
+        <p class="subtitle">Live pricing + buy/sell calculators tailored for India</p>
+      </div>
+      <div class="live-price-card">
+        <div class="live-label">Live Price</div>
+        <div id="livePrice" class="live-price">Loading...</div>
+        <div id="liveSymbol" class="live-symbol">—</div>
+      </div>
+    </header>
+
+    <section class="tabs">
+      <button class="tab-btn active" data-tab="buy">Buy Mode</button>
+      <button class="tab-btn" data-tab="sell">Sell Mode</button>
+    </section>
+
+    <main>
+      <section id="buy" class="tab-panel active">
+        <div class="card">
+          <h2>Investment Planner</h2>
+          <div class="form-grid">
+            <div class="field">
+              <label for="investAmount">Amount to Invest (INR)</label>
+              <input type="number" id="investAmount" placeholder="e.g. 25000" min="0" step="0.01" />
+            </div>
+            <div class="field">
+              <label for="buyCoin">Select Coin</label>
+              <select id="buyCoin">
+                <option value="bitcoin" data-symbol="BTC">BTC (Bitcoin)</option>
+                <option value="ethereum" data-symbol="ETH">ETH (Ethereum)</option>
+                <option value="solana" data-symbol="SOL">SOL (Solana)</option>
+                <option value="matic-network" data-symbol="MATIC">MATIC (Polygon)</option>
+              </select>
+            </div>
+          </div>
+          <button id="calculateBuy" class="primary-btn">Calculate Units</button>
+        </div>
+
+        <div class="result-card" id="buyResult">
+          <h3>Investment Breakdown</h3>
+          <div class="result-grid">
+            <div class="result-item">
+              <span>Exchange Fee (0.2%)</span>
+              <strong id="buyFee">—</strong>
+            </div>
+            <div class="result-item">
+              <span>GST (18% on Fee)</span>
+              <strong id="buyGst">—</strong>
+            </div>
+            <div class="result-item">
+              <span>Net Invested</span>
+              <strong id="buyNet">—</strong>
+            </div>
+            <div class="result-item highlight">
+              <span>Units Received</span>
+              <strong id="buyUnits">—</strong>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="sell" class="tab-panel">
+        <div class="card">
+          <h2>Tax Calculator</h2>
+          <div class="form-grid">
+            <div class="field">
+              <label for="buyingPrice">Buying Price (Total INR)</label>
+              <input type="number" id="buyingPrice" placeholder="e.g. 40000" min="0" step="0.01" />
+            </div>
+            <div class="field">
+              <label for="sellingPrice">Selling Price (Total INR)</label>
+              <input type="number" id="sellingPrice" placeholder="e.g. 52000" min="0" step="0.01" />
+            </div>
+          </div>
+          <button id="calculateSell" class="primary-btn">Calculate Profit</button>
+        </div>
+
+        <div class="result-card" id="sellResult">
+          <h3>Tax Breakdown</h3>
+          <div class="result-grid">
+            <div class="result-item">
+              <span>Gross Profit</span>
+              <strong id="grossProfit">—</strong>
+            </div>
+            <div class="result-item">
+              <span>Tax (30% on Profit)</span>
+              <strong id="taxDeducted">—</strong>
+            </div>
+            <div class="result-item">
+              <span>TDS (1% on Selling)</span>
+              <strong id="tdsDeducted">—</strong>
+            </div>
+            <div class="result-item highlight">
+              <span>Net Profit</span>
+              <strong id="netProfit">—</strong>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
