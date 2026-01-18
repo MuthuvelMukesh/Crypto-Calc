@@ -3,7 +3,6 @@
 A lightweight, single-page web application designed for planning cryptocurrency investments and calculating taxes under Indian tax regulations. Built with vanilla HTML, CSS, and JavaScript, powered by live cryptocurrency prices from the CoinGecko API.
 
 [![Live Demo](https://img.shields.io/badge/demo-live-success?style=for-the-badge)](https://muthuvelmukesh.github.io/Crypto-Calc/)
-[![License](https://img.shields.io/badge/license-MIT-blue?style=for-the-badge)](LICENSE)
 
 ## 🚀 Live Demo
 
@@ -207,7 +206,7 @@ Contributions are welcome! If you'd like to contribute:
 
 ## 📄 License
 
-This project is open source and available under the [MIT License](LICENSE).
+This project is open source. Please check the repository for license details.
 
 ## 👨‍💻 Author
 
