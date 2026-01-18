@@ -130,7 +130,7 @@ Since this is a static site, you can deploy it to:
 3. Enter your investment amount in INR
 4. Click "Calculate Buy"
 5. View the breakdown:
-   - Platform fee (1%)
+   - Platform fee (0.2%)
    - GST on fee (18%)
    - Net investment amount
    - Units you'll receive
@@ -164,7 +164,7 @@ This calculator implements the following Indian tax rules for cryptocurrencies:
 - **TDS:** 1% Tax Deducted at Source on the selling price (as per Section 194S)
 - **GST on Fees:** 18% GST is applicable on platform/exchange fees
 
-**Disclaimer:** This calculator is for educational and planning purposes only. Please consult a tax professional for accurate tax advice.
+**Disclaimer:** This calculator is for educational and planning purposes only. Tax rules may change over time. Please consult a tax professional for accurate and up-to-date tax advice.
 
 ## 📁 Project Structure
 
