@@ -150,7 +150,7 @@ Since this is a static site, you can deploy it to:
 This application uses the **CoinGecko API** for fetching live cryptocurrency prices:
 
 - **Endpoint:** `https://api.coingecko.com/api/v3/simple/price`
-- **Rate Limits:** CoinGecko free API has rate limits (50 calls/minute)
+- **Rate Limits:** CoinGecko free API has rate limits - please refer to their [official documentation](https://www.coingecko.com/en/api/documentation) for current limits
 - **Supported Coins:** Bitcoin (BTC), Ethereum (ETH), Solana (SOL), Polygon (MATIC)
 - **Currency:** Indian Rupee (INR)
 
