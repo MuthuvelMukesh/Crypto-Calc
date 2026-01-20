@@ -17,6 +17,8 @@
         <div class="live-label">Live Price</div>
         <div id="livePrice" class="live-price">Loading...</div>
         <div id="liveSymbol" class="live-symbol">—</div>
+        <div id="priceMessage" class="status-message">Fetching latest price...</div>
+        <button id="retryPrice" class="secondary-btn" type="button">Retry</button>
       </div>
     </header>
 
@@ -35,6 +37,39 @@
               <input type="number" id="investAmount" placeholder="e.g. 25000" min="0" step="0.01" />
             </div>
             <div class="field">
+              <label for="exchangeSelect">Exchange</label>
+              <select id="exchangeSelect">
+                <option value="wazirx">WazirX</option>
+                <option value="coindcx">CoinDCX</option>
+                <option value="binance">Binance</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="feePercent">Exchange Fee (%)</label>
+              <div class="fee-input-row">
+                <input type="number" id="feePercent" placeholder="e.g. 0.2" min="0" step="0.01" />
+                <button type="button" id="saveFee" class="secondary-btn" title="Save fee for selected exchange">Save</button>
+              </div>
+            </div>
+            <div class="field toggle-field">
+              <label for="gstToggle">GST on Fee</label>
+              <label class="toggle">
+                <input type="checkbox" id="gstToggle" checked />
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            <div class="field toggle-field">
+              <label for="p2pToggle">P2P / USDT Premium</label>
+              <label class="toggle">
+                <input type="checkbox" id="p2pToggle" />
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            <div class="field" id="usdtRateField" style="display:none;">
+              <label for="usdtRate">USDT Rate (₹ per USDT)</label>
+              <input type="number" id="usdtRate" placeholder="e.g. 92" min="0" step="0.01" />
+            </div>
+            <div class="field">
               <label for="buyCoin">Select Coin</label>
               <select id="buyCoin">
                 <option value="bitcoin" data-symbol="BTC">BTC (Bitcoin)</option>
@@ -44,7 +79,17 @@
               </select>
             </div>
           </div>
+          <div class="search-card">
+            <h4>Add any Coin (CoinGecko)</h4>
+            <div class="search-row">
+              <input type="text" id="coinSearch" placeholder="Search coins (e.g. dogecoin)" />
+              <button id="searchCoins" class="secondary-btn" type="button">Search</button>
+            </div>
+            <div id="coinSearchMessage" class="status-message"></div>
+            <div id="coinResults" class="search-results"></div>
+          </div>
           <button id="calculateBuy" class="primary-btn">Calculate Units</button>
+          <div id="buyMessage" class="form-message" role="status" aria-live="polite"></div>
         </div>
 
         <div class="result-card" id="buyResult">
@@ -75,20 +120,37 @@
           <h2>Tax Calculator</h2>
           <div class="form-grid">
             <div class="field">
-              <label for="buyingPrice">Buying Price (Total INR)</label>
-              <input type="number" id="buyingPrice" placeholder="e.g. 40000" min="0" step="0.01" />
+              <label for="unitsBought">Units Bought</label>
+              <input type="number" id="unitsBought" placeholder="e.g. 500" min="0" step="any" />
             </div>
             <div class="field">
-              <label for="sellingPrice">Selling Price (Total INR)</label>
-              <input type="number" id="sellingPrice" placeholder="e.g. 52000" min="0" step="0.01" />
+              <label for="buyPricePerUnit">Buy Price per Unit (₹)</label>
+              <input type="number" id="buyPricePerUnit" placeholder="e.g. 10" min="0" step="0.01" />
+            </div>
+            <div class="field">
+              <label for="unitsToSell">Units to Sell</label>
+              <input type="number" id="unitsToSell" placeholder="e.g. 200" min="0" step="any" />
+            </div>
+            <div class="field">
+              <label for="sellPricePerUnit">Sell Price per Unit (₹)</label>
+              <input type="number" id="sellPricePerUnit" placeholder="e.g. 15" min="0" step="0.01" />
             </div>
           </div>
           <button id="calculateSell" class="primary-btn">Calculate Profit</button>
+          <div id="sellMessage" class="form-message" role="status" aria-live="polite"></div>
         </div>
 
         <div class="result-card" id="sellResult">
           <h3>Tax Breakdown</h3>
           <div class="result-grid">
+            <div class="result-item">
+              <span>Cost Basis (Sold Units)</span>
+              <strong id="costBasis">—</strong>
+            </div>
+            <div class="result-item">
+              <span>Sale Value</span>
+              <strong id="saleValue">—</strong>
+            </div>
             <div class="result-item">
               <span>Gross Profit</span>
               <strong id="grossProfit">—</strong>
@@ -98,17 +160,44 @@
               <strong id="taxDeducted">—</strong>
             </div>
             <div class="result-item">
+              <span>Cess (4% on Tax)</span>
+              <strong id="cessDeducted">—</strong>
+            </div>
+            <div class="result-item">
               <span>TDS (1% on Selling)</span>
               <strong id="tdsDeducted">—</strong>
+            </div>
+            <div class="result-item">
+              <span>Exchange Fee</span>
+              <strong id="sellFee">—</strong>
+            </div>
+            <div class="result-item">
+              <span>GST (on Fee)</span>
+              <strong id="sellGst">—</strong>
             </div>
             <div class="result-item highlight">
               <span>Net Profit</span>
               <strong id="netProfit">—</strong>
             </div>
+            <div class="result-item highlight">
+              <span>ROI</span>
+              <strong id="roiPercent">—</strong>
+            </div>
           </div>
+          <div class="breakdown-chart" id="breakdownChart">
+            <h4>Sale Value Breakdown</h4>
+            <div class="chart-bar" id="chartBar"></div>
+            <div class="chart-legend" id="chartLegend"></div>
+          </div>
+          <div id="lossMessage" class="info-message" role="status" aria-live="polite"></div>
+          <div class="rule-message">Crypto losses cannot be offset in India (VDA rule).</div>
         </div>
       </section>
     </main>
+
+    <footer class="disclaimer-card">
+      <strong>Disclaimer:</strong> Educational purpose only – not financial advice.
+    </footer>
   </div>
 
   <script src="script.js"></script>
