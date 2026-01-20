@@ -29,6 +29,8 @@ A lightweight, single-page web application designed for planning cryptocurrency 
 - 🎨 Modern fintech-style UI with clean interface
 - ⚡ Fast, lightweight, no backend required
 - 🌐 Works entirely in the browser
+- ✅ Input validation with helpful error messages
+- 🔄 API error handling with retry functionality
 
 ## 🛠️ Tech Stack
 
@@ -156,6 +158,21 @@ This application uses the **CoinGecko API** for fetching live cryptocurrency pri
 
 **Note:** If you encounter rate limit errors, please wait a few moments before making another request.
 
+## ⚠️ Input Validation & Error Handling
+
+### Input Validation Messages
+The calculator provides clear feedback when calculations cannot be performed:
+- **Empty fields:** "Please enter a value"
+- **Invalid inputs:** "Please enter a valid number"
+- **Zero values:** "Amount must be greater than zero"
+- **Negative values:** "Amount cannot be negative"
+
+### API Error Handling
+- **CoinGecko API failures:** Displays "Failed to fetch price. Please try again."
+- **Retry functionality:** Use the retry button to attempt fetching prices again
+- **Rate limit errors:** Clear message prompting users to wait before retrying
+- **Network issues:** Proper error messages when connection fails
+
 ## 💡 Indian Tax Rules
 
 This calculator implements the following Indian tax rules for cryptocurrencies:
@@ -164,7 +181,33 @@ This calculator implements the following Indian tax rules for cryptocurrencies:
 - **TDS:** 1% Tax Deducted at Source on the selling price (as per Section 194S)
 - **GST on Fees:** 18% GST is applicable on platform/exchange fees
 
+### ⚠️ Important: Crypto Losses in India
+
+**Crypto losses cannot be offset in India under VDA rules.** According to Section 115BBH:
+- Losses from cryptocurrency transactions cannot be set off against other income
+- Losses cannot be carried forward to future years
+- Each transaction is taxed independently
+- Even if you have overall losses, profits from individual transactions are still taxable at 30%
+
 **Disclaimer:** This calculator is for educational and planning purposes only. Tax rules may change over time. Please consult a tax professional for accurate and up-to-date tax advice.
+
+## 📢 Important Disclaimer
+
+**⚠️ EDUCATIONAL PURPOSE ONLY – NOT FINANCIAL ADVICE**
+
+This tool is provided for educational and informational purposes only. It is NOT intended as:
+- Financial advice
+- Investment advice
+- Tax advice
+- Professional consultation
+
+**Always:**
+- Consult with a qualified tax professional for your specific situation
+- Verify all calculations independently
+- Check current tax laws and regulations
+- Understand that tax rules may change
+
+The developers assume no responsibility for any financial decisions made based on this calculator.
 
 ## 📁 Project Structure
 
