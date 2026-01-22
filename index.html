@@ -4,6 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Indian Crypto Tax & Investment Planner</title>
+  <meta name="theme-color" content="#1e63ff" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="icons/icon-512.svg" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -13,22 +17,51 @@
         <h1>Indian Crypto Tax & Investment Planner</h1>
         <p class="subtitle">Live pricing + buy/sell calculators tailored for India</p>
       </div>
+
+      <div class="header-actions">
+        <button id="themeToggle" class="secondary-btn" type="button" aria-pressed="false" title="Toggle dark mode">Theme</button>
+      </div>
+
       <div class="live-price-card">
         <div class="live-label">Live Price</div>
         <div id="livePrice" class="live-price">Loading...</div>
         <div id="liveSymbol" class="live-symbol">—</div>
-        <div id="priceMessage" class="status-message">Fetching latest price...</div>
+        <div id="lastUpdated" class="live-updated" aria-label="Last updated">—</div>
+
+        <div class="live-tools" aria-label="Live tools">
+          <div class="mini-field">
+            <label for="priceSource">Source</label>
+            <select id="priceSource">
+              <option value="coingecko">CoinGecko</option>
+              <option value="binance">Binance (USDT)</option>
+              <option value="manual">Manual</option>
+            </select>
+          </div>
+          <div class="mini-field">
+            <label for="usdInrRate">USD/INR</label>
+            <input id="usdInrRate" type="number" inputmode="decimal" min="0" step="0.01" placeholder="e.g. 83.20" />
+          </div>
+          <div class="mini-field" id="manualPriceField" hidden>
+            <label for="manualPriceInr">Manual Price (₹)</label>
+            <input id="manualPriceInr" type="number" inputmode="decimal" min="0" step="0.01" placeholder="e.g. 2500000" />
+          </div>
+          <button id="fetchFx" class="secondary-btn" type="button" title="Fetch USD/INR rate">Fetch FX</button>
+          <button id="applyManualPrice" class="secondary-btn" type="button" title="Apply manual price" hidden>Set</button>
+        </div>
+
+        <div id="priceMessage" class="status-message" role="status" aria-live="polite">Fetching latest price...</div>
         <button id="retryPrice" class="secondary-btn" type="button">Retry</button>
       </div>
     </header>
 
-    <section class="tabs">
-      <button class="tab-btn active" data-tab="buy">Buy Mode</button>
-      <button class="tab-btn" data-tab="sell">Sell Mode</button>
+    <section class="tabs" role="tablist" aria-label="Calculator mode">
+      <button id="tab-buy" class="tab-btn active" data-tab="buy" role="tab" aria-selected="true" aria-controls="buy" tabindex="0" type="button">Buy Mode</button>
+      <button id="tab-sell" class="tab-btn" data-tab="sell" role="tab" aria-selected="false" aria-controls="sell" tabindex="-1" type="button">Sell Mode</button>
+      <button id="tab-portfolio" class="tab-btn" data-tab="portfolio" role="tab" aria-selected="false" aria-controls="portfolio" tabindex="-1" type="button">Portfolio</button>
     </section>
 
     <main>
-      <section id="buy" class="tab-panel active">
+      <section id="buy" class="tab-panel active" role="tabpanel" aria-labelledby="tab-buy">
         <div class="card">
           <h2>Investment Planner</h2>
           <div class="form-grid">
@@ -65,7 +98,7 @@
                 <span class="toggle-slider"></span>
               </label>
             </div>
-            <div class="field" id="usdtRateField" style="display:none;">
+            <div class="field" id="usdtRateField" hidden>
               <label for="usdtRate">USDT Rate (₹ per USDT)</label>
               <input type="number" id="usdtRate" placeholder="e.g. 92" min="0" step="0.01" />
             </div>
@@ -78,6 +111,14 @@
                 <option value="matic-network" data-symbol="MATIC">MATIC (Polygon)</option>
               </select>
             </div>
+
+            <div class="field">
+              <label for="targetUnits">Target Units (optional)</label>
+              <div class="inline-input-row">
+                <input type="number" id="targetUnits" placeholder="e.g. 0.01" min="0" step="any" />
+                <button id="fillInvestForUnits" class="secondary-btn" type="button" title="Fill investment amount for target units">Fill Amount</button>
+              </div>
+            </div>
           </div>
           <div class="search-card">
             <h4>Add any Coin (CoinGecko)</h4>
@@ -85,10 +126,14 @@
               <input type="text" id="coinSearch" placeholder="Search coins (e.g. dogecoin)" />
               <button id="searchCoins" class="secondary-btn" type="button">Search</button>
             </div>
-            <div id="coinSearchMessage" class="status-message"></div>
+            <div id="coinSearchMessage" class="status-message" role="status" aria-live="polite"></div>
             <div id="coinResults" class="search-results"></div>
           </div>
-          <button id="calculateBuy" class="primary-btn">Calculate Units</button>
+          <div class="action-row">
+            <button id="calculateBuy" class="primary-btn" type="button">Calculate Units</button>
+            <button id="resetBuy" class="secondary-btn" type="button">Reset</button>
+            <button id="copyBuy" class="secondary-btn" type="button">Copy Results</button>
+          </div>
           <div id="buyMessage" class="form-message" role="status" aria-live="polite"></div>
         </div>
 
@@ -111,11 +156,20 @@
               <span>Units Received</span>
               <strong id="buyUnits">—</strong>
             </div>
+
+            <div class="result-item">
+              <span>Effective Price / Unit</span>
+              <strong id="effectiveBuyPrice">—</strong>
+            </div>
+            <div class="result-item">
+              <span>Fees+GST / Unit</span>
+              <strong id="feePerUnit">—</strong>
+            </div>
           </div>
         </div>
       </section>
 
-      <section id="sell" class="tab-panel">
+      <section id="sell" class="tab-panel" role="tabpanel" aria-labelledby="tab-sell" hidden>
         <div class="card">
           <h2>Tax Calculator</h2>
           <div class="form-grid">
@@ -125,7 +179,10 @@
             </div>
             <div class="field">
               <label for="buyPricePerUnit">Buy Price per Unit (₹)</label>
-              <input type="number" id="buyPricePerUnit" placeholder="e.g. 10" min="0" step="0.01" />
+              <div class="inline-input-row">
+                <input type="number" id="buyPricePerUnit" placeholder="e.g. 10" min="0" step="0.01" />
+                <button id="useLiveBuyPrice" class="secondary-btn" type="button" title="Use current live price">Use Live</button>
+              </div>
             </div>
             <div class="field">
               <label for="unitsToSell">Units to Sell</label>
@@ -133,10 +190,73 @@
             </div>
             <div class="field">
               <label for="sellPricePerUnit">Sell Price per Unit (₹)</label>
-              <input type="number" id="sellPricePerUnit" placeholder="e.g. 15" min="0" step="0.01" />
+              <div class="inline-input-row">
+                <input type="number" id="sellPricePerUnit" placeholder="e.g. 15" min="0" step="0.01" />
+                <button id="useLiveSellPrice" class="secondary-btn" type="button" title="Use current live price">Use Live</button>
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="surchargeRate">Surcharge (on tax)</label>
+              <select id="surchargeRate">
+                <option value="0">0%</option>
+                <option value="0.10">10%</option>
+                <option value="0.15">15%</option>
+                <option value="0.25">25%</option>
+                <option value="0.37">37%</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="tdsMode">TDS (1%)</label>
+              <select id="tdsMode">
+                <option value="always">Apply always</option>
+                <option value="threshold">Apply only if threshold crossed</option>
+              </select>
+            </div>
+
+            <div class="field" id="tdsThresholdFields" hidden>
+              <label for="tdsCategory">TDS Category</label>
+              <select id="tdsCategory">
+                <option value="individual_huf">Individual / HUF (₹50,000 threshold)</option>
+                <option value="other">Others (₹10,000 threshold)</option>
+              </select>
+            </div>
+
+            <div class="field" id="annualConsiderationField" hidden>
+              <label for="annualConsideration">Annual Consideration (₹)</label>
+              <input type="number" id="annualConsideration" placeholder="e.g. 60000" min="0" step="0.01" />
+            </div>
+
+            <div class="field">
+              <label for="targetNetProfit">Target Net Profit (₹)</label>
+              <div class="inline-input-row">
+                <input type="number" id="targetNetProfit" placeholder="e.g. 5000" step="0.01" />
+                <button id="calcBreakEven" class="secondary-btn" type="button" title="Calculate required sell price">Break-even Price</button>
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="targetNetAfterTax">Target Net After Tax (₹)</label>
+              <div class="inline-input-row">
+                <input type="number" id="targetNetAfterTax" placeholder="e.g. 3000" step="0.01" />
+                <button id="calcUnitsToSell" class="secondary-btn" type="button" title="Calculate how many units to sell">Units to Sell</button>
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="targetNetProceeds">Target Net Proceeds (₹)</label>
+              <div class="inline-input-row">
+                <input type="number" id="targetNetProceeds" placeholder="e.g. 20000" step="0.01" />
+                <button id="calcSellPriceForProceeds" class="secondary-btn" type="button" title="Calculate sell price for target net proceeds">Required Sell Price</button>
+              </div>
             </div>
           </div>
-          <button id="calculateSell" class="primary-btn">Calculate Profit</button>
+          <div class="action-row">
+            <button id="calculateSell" class="primary-btn" type="button">Calculate Profit</button>
+            <button id="resetSell" class="secondary-btn" type="button">Reset</button>
+            <button id="copySell" class="secondary-btn" type="button">Copy Results</button>
+          </div>
           <div id="sellMessage" class="form-message" role="status" aria-live="polite"></div>
         </div>
 
@@ -160,7 +280,11 @@
               <strong id="taxDeducted">—</strong>
             </div>
             <div class="result-item">
-              <span>Cess (4% on Tax)</span>
+              <span>Surcharge (on Tax)</span>
+              <strong id="surchargeDeducted">—</strong>
+            </div>
+            <div class="result-item">
+              <span>Cess (4% on Tax + Surcharge)</span>
               <strong id="cessDeducted">—</strong>
             </div>
             <div class="result-item">
@@ -193,12 +317,127 @@
           <div class="rule-message">Crypto losses cannot be offset in India (VDA rule).</div>
         </div>
       </section>
+
+      <section id="portfolio" class="tab-panel" role="tabpanel" aria-labelledby="tab-portfolio" hidden>
+        <div class="card">
+          <h2>Portfolio Ledger</h2>
+          <p class="subtitle">Track multiple buys/sells with FIFO or Average Cost. Uses your current Sell Mode settings for surcharge and TDS.</p>
+
+          <div class="form-grid">
+            <div class="field">
+              <label for="portfolioMethod">Costing Method</label>
+              <select id="portfolioMethod">
+                <option value="fifo">FIFO</option>
+                <option value="avg">Average Cost</option>
+              </select>
+            </div>
+          </div>
+
+          <h3>Add Transaction</h3>
+          <div class="form-grid">
+            <div class="field">
+              <label for="txDate">Date</label>
+              <input type="date" id="txDate" />
+            </div>
+            <div class="field">
+              <label for="txType">Type</label>
+              <select id="txType">
+                <option value="buy">Buy</option>
+                <option value="sell">Sell</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="txAsset">Asset (symbol)</label>
+              <input type="text" id="txAsset" placeholder="e.g. BTC" />
+            </div>
+            <div class="field">
+              <label for="txUnits">Units</label>
+              <input type="number" id="txUnits" placeholder="e.g. 0.01" min="0" step="any" />
+            </div>
+            <div class="field">
+              <label for="txPrice">Price / Unit (₹)</label>
+              <input type="number" id="txPrice" placeholder="e.g. 2500000" min="0" step="0.01" />
+            </div>
+            <div class="field">
+              <label for="txFeePercent">Fee %</label>
+              <input type="number" id="txFeePercent" placeholder="e.g. 0.2" min="0" step="0.01" />
+            </div>
+            <div class="field toggle-field">
+              <label for="txGstEnabled">GST on fee</label>
+              <label class="toggle">
+                <input type="checkbox" id="txGstEnabled" checked />
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            <div class="field">
+              <label for="txNotes">Notes (optional)</label>
+              <input type="text" id="txNotes" placeholder="e.g. WazirX spot" />
+            </div>
+          </div>
+
+          <div class="action-row">
+            <button id="addTx" class="primary-btn" type="button">Add</button>
+            <button id="clearPortfolio" class="secondary-btn" type="button">Clear All</button>
+            <button id="exportTxCsv" class="secondary-btn" type="button">Export Tx CSV</button>
+            <button id="exportFyCsv" class="secondary-btn" type="button">Export FY CSV</button>
+          </div>
+          <div id="portfolioMessage" class="form-message" role="status" aria-live="polite"></div>
+        </div>
+
+        <div class="result-card">
+          <h3>Transactions</h3>
+          <div class="table-wrap">
+            <table class="data-table" id="txTable">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Type</th>
+                  <th>Asset</th>
+                  <th>Units</th>
+                  <th>Price</th>
+                  <th>Fee%</th>
+                  <th>GST</th>
+                  <th>Notes</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="txTbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="result-card">
+          <h3>Holdings & FY Summary</h3>
+          <div id="portfolioSummary" class="result-grid"></div>
+          <div class="table-wrap">
+            <table class="data-table" id="fyTable">
+              <thead>
+                <tr>
+                  <th>FY</th>
+                  <th>Sell Value</th>
+                  <th>Cost Basis</th>
+                  <th>Gross P/L</th>
+                  <th>Tax</th>
+                  <th>Surcharge</th>
+                  <th>Cess</th>
+                  <th>TDS</th>
+                  <th>Fees+GST</th>
+                  <th>Net P/L</th>
+                </tr>
+              </thead>
+              <tbody id="fyTbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
     </main>
 
     <footer class="disclaimer-card">
       <strong>Disclaimer:</strong> Educational purpose only – not financial advice.
     </footer>
   </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true" hidden></div>
 
   <script src="script.js"></script>
 </body>

@@ -1,0 +1,24 @@
+{
+  "name": "Indian Crypto Tax & Investment Planner",
+  "short_name": "Crypto Calc",
+  "description": "Live crypto pricing + buy/sell calculators tailored for India.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0b1220",
+  "theme_color": "#1e63ff",
+  "icons": [
+    {
+      "src": "icons/icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

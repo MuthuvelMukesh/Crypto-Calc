@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Crypto Calc icon">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1e63ff" />
+      <stop offset="1" stop-color="#22c55e" />
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="#0b1220"/>
+  <circle cx="256" cy="256" r="172" fill="url(#g)" opacity="0.95"/>
+  <path d="M173 214c0-46 37-83 83-83h33c46 0 83 37 83 83v84c0 46-37 83-83 83h-33c-46 0-83-37-83-83v-84z" fill="#0b1220" opacity="0.9"/>
+  <path d="M236 196h52c20 0 36 16 36 36s-16 36-36 36h-52v-72zm0 104h58c18 0 32 14 32 32s-14 32-32 32h-58v-64z" fill="#e6edf7"/>
+</svg>
