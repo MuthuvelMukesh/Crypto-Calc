@@ -1,0 +1,29 @@
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# OS files
+.DS_Store
+Thumbs.db
+*.log
+
+# Editor directories
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Node and Build
+node_modules/
+dist/
+build/
+
+# Deployment
+.vercel
+.netlify
+
+# IDE
+*.code-workspace
+

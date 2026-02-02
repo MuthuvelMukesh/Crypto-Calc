@@ -1,0 +1,36 @@
+{
+  "name": "crypto-calc",
+  "version": "1.0.0",
+  "description": "Indian Crypto Tax & Investment Planner - Live pricing + buy/sell calculators tailored for India",
+  "type": "module",
+  "main": "dist/index.html",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "serve": "vite preview --port 5000",
+    "lint": "eslint src --ext .js",
+    "format": "prettier --write \"src/**/*.{js,css,html}\""
+  },
+  "keywords": [
+    "crypto",
+    "tax",
+    "calculator",
+    "India",
+    "VDA",
+    "investment",
+    "planner"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-basic-ssl": "^1.0.1",
+    "eslint": "^8.55.0",
+    "prettier": "^3.1.1",
+    "terser": "^5.46.0",
+    "vite": "^5.0.0"
+  }
+}

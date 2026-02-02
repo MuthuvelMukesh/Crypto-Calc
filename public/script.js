@@ -1,3 +1,6 @@
+// Crypto Calculator - Main Application Module
+'use strict';
+
 const COINS = {
   bitcoin: { id: "bitcoin", symbol: "BTC" },
   ethereum: { id: "ethereum", symbol: "ETH" },

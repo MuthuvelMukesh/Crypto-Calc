@@ -96,10 +96,79 @@ const addTxBtn = document.getElementById("addTx");
 const clearPortfolioBtn = document.getElementById("clearPortfolio");
 const exportTxCsvBtn = document.getElementById("exportTxCsv");
 const exportFyCsvBtn = document.getElementById("exportFyCsv");
+const exportScheduleFaBtn = document.getElementById("exportScheduleFa");
+const exportCaReportBtn = document.getElementById("exportCaReport");
+const exportCaReportEncryptedBtn = document.getElementById("exportCaReportEncrypted");
 const portfolioMessageEl = document.getElementById("portfolioMessage");
 const txTbodyEl = document.getElementById("txTbody");
 const fyTbodyEl = document.getElementById("fyTbody");
 const portfolioSummaryEl = document.getElementById("portfolioSummary");
+
+// Swap Elements
+const swapDateInput = document.getElementById("swapDate");
+const swapFromAssetInput = document.getElementById("swapFromAsset");
+const swapFromUnitsInput = document.getElementById("swapFromUnits");
+const swapFromPriceInput = document.getElementById("swapFromPrice");
+const swapToAssetInput = document.getElementById("swapToAsset");
+const swapToUnitsInput = document.getElementById("swapToUnits");
+const swapToPriceInput = document.getElementById("swapToPrice");
+const swapFeePercentInput = document.getElementById("swapFeePercent");
+const swapGstEnabledInput = document.getElementById("swapGstEnabled");
+const swapNotesInput = document.getElementById("swapNotes");
+const addSwapBtn = document.getElementById("addSwap");
+
+// CSV Import Elements
+const importCsvInput = document.getElementById("importCsv");
+const importCsvModeSelect = document.getElementById("importCsvMode");
+const importCsvBtn = document.getElementById("importCsvBtn");
+const importCsvMessageEl = document.getElementById("importCsvMessage");
+
+// API Import Elements
+const apiExchangeSelect = document.getElementById("apiExchange");
+const apiKeyInput = document.getElementById("apiKey");
+const apiSecretInput = document.getElementById("apiSecret");
+const apiImportBtn = document.getElementById("apiImportBtn");
+const apiImportMessageEl = document.getElementById("apiImportMessage");
+
+// Staking/Income Elements
+const stakingDateInput = document.getElementById("stakingDate");
+const stakingTypeSelect = document.getElementById("stakingType");
+const stakingAssetInput = document.getElementById("stakingAsset");
+const stakingUnitsInput = document.getElementById("stakingUnits");
+const stakingValueInput = document.getElementById("stakingValue");
+const stakingNotesInput = document.getElementById("stakingNotes");
+const addStakingIncomeBtn = document.getElementById("addStakingIncome");
+const clearStakingIncomeBtn = document.getElementById("clearStakingIncome");
+const exportStakingCsvBtn = document.getElementById("exportStakingCsv");
+const stakingMessageEl = document.getElementById("stakingMessage");
+const stakingTbodyEl = document.getElementById("stakingTbody");
+const stakingTotalEl = document.getElementById("stakingTotal");
+
+// Derivatives Elements
+const positionSideSelect = document.getElementById("positionSide");
+const entryPriceInput = document.getElementById("entryPrice");
+const exitPriceInput = document.getElementById("exitPrice");
+const contractQtyInput = document.getElementById("contractQty");
+const contractSizeInput = document.getElementById("contractSize");
+const leverageInput = document.getElementById("leverage");
+const fundingFeesInput = document.getElementById("fundingFees");
+const calculateDerivativesBtn = document.getElementById("calculateDerivatives");
+const derivativeGrossEl = document.getElementById("derivativeGross");
+const derivativeNetEl = document.getElementById("derivativeNet");
+const derivativeRoiEl = document.getElementById("derivativeRoi");
+
+// Bank Withdrawal Tracker Elements
+const withdrawalDateInput = document.getElementById("withdrawalDate");
+const withdrawalBankInput = document.getElementById("withdrawalBank");
+const withdrawalAmountInput = document.getElementById("withdrawalAmount");
+const withdrawalModeSelect = document.getElementById("withdrawalMode");
+const withdrawalFeeInput = document.getElementById("withdrawalFee");
+const withdrawalNotesInput = document.getElementById("withdrawalNotes");
+const addWithdrawalBtn = document.getElementById("addWithdrawal");
+const clearWithdrawalsBtn = document.getElementById("clearWithdrawals");
+const exportWithdrawalsCsvBtn = document.getElementById("exportWithdrawalsCsv");
+const withdrawalTbodyEl = document.getElementById("withdrawalTbody");
+const totalWithdrawalFeesEl = document.getElementById("totalWithdrawalFees");
 
 let currentPrice = 0;
 let currentPriceUSD = 0;
@@ -149,10 +218,22 @@ const PRICE_CACHE_TTL_MS = 25_000;
 const FX_CACHE_TTL_MS = 12 * 60 * 60_000;
 
 const EXCHANGE_FEE_KEY = "cryptoCalcExchangeFees";
+
+// Default exchange fee presets (in percent)
+const DEFAULT_EXCHANGE_FEES = {
+  wazirx: 0.1,      // 0.1% for WazirX
+  coindcx: 0.1,     // 0.1% for CoinDCX
+  buyucoin: 0.2,    // 0.2% for BuyUcoin
+  coinswitch: 0.5,  // 0.5% for CoinSwitch Kuber
+  bitbns: 0.25,     // 0.25% for Bitbns
+  binance: 0.1      // 0.1% for Binance
+};
 const PREFS_KEY = "cryptoCalcPreferences";
 const PRICE_CACHE_KEY = "cryptoCalcPriceCache";
 const FX_CACHE_KEY = "cryptoCalcFxCache";
 const PORTFOLIO_KEY = "cryptoCalcPortfolio";
+const WITHDRAWALS_KEY = "cryptoCalcWithdrawals";
+const STAKING_KEY = "cryptoCalcStaking";
 
 let toastTimer = null;
 
@@ -263,7 +344,7 @@ const applyTheme = (theme) => {
     themeToggleBtn.setAttribute("aria-pressed", t === "dark" ? "true" : "false");
     themeToggleBtn.textContent = t === "dark" ? "Dark" : "Light";
   }
-  const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+  const themeColorMeta = document.querySelector("meta[name=\"theme-color\"]");
   if (themeColorMeta) {
     themeColorMeta.setAttribute("content", t === "dark" ? "#0b1220" : "#1e63ff");
   }
@@ -272,9 +353,11 @@ const applyTheme = (theme) => {
 const getExchangeFees = () => {
   try {
     const stored = localStorage.getItem(EXCHANGE_FEE_KEY);
-    return stored ? JSON.parse(stored) : {};
+    const userFees = stored ? JSON.parse(stored) : {};
+    // Merge defaults with user-saved fees (user fees override defaults)
+    return { ...DEFAULT_EXCHANGE_FEES, ...userFees };
   } catch {
-    return {};
+    return DEFAULT_EXCHANGE_FEES;
   }
 };
 
@@ -387,6 +470,34 @@ const savePortfolio = (portfolio) => {
   localStorage.setItem(PORTFOLIO_KEY, JSON.stringify(portfolio));
 };
 
+// Bank Withdrawal Management
+const loadWithdrawals = () => {
+  try {
+    const stored = localStorage.getItem(WITHDRAWALS_KEY);
+    return stored ? JSON.parse(stored) : { withdrawals: [] };
+  } catch {
+    return { withdrawals: [] };
+  }
+};
+
+const saveWithdrawals = (withdrawalsData) => {
+  localStorage.setItem(WITHDRAWALS_KEY, JSON.stringify(withdrawalsData));
+};
+
+// Staking/Income Management
+const loadStaking = () => {
+  try {
+    const stored = localStorage.getItem(STAKING_KEY);
+    return stored ? JSON.parse(stored) : { entries: [] };
+  } catch {
+    return { entries: [] };
+  }
+};
+
+const saveStaking = (stakingData) => {
+  localStorage.setItem(STAKING_KEY, JSON.stringify(stakingData));
+};
+
 const normalizeAsset = (raw) => {
   const v = (raw ?? "").toString().trim().toUpperCase();
   if (v) return v;
@@ -427,7 +538,7 @@ const toCsv = (rows) =>
       row
         .map((cell) => {
           const s = cell === null || cell === undefined ? "" : String(cell);
-          const escaped = s.replaceAll('"', '""');
+          const escaped = s.replaceAll("\"", "\"\"");
           return /[\n",]/.test(escaped) ? `"${escaped}"` : escaped;
         })
         .join(",")
@@ -456,6 +567,7 @@ const computePortfolio = (portfolio) => {
   const fyAgg = new Map(); // fyLabel -> aggregates
   let currentFy = null;
   let fyConsideration = 0;
+  const sellTxs = []; // Track sell transactions for Schedule FA
 
   const ensureFy = (fy) => {
     if (!fyAgg.has(fy)) {
@@ -591,6 +703,19 @@ const computePortfolio = (portfolio) => {
 
     const netProfit = grossProfit - baseTax - surcharge - cess - tds - fee - gst;
 
+    // Track for Schedule FA
+    sellTxs.push({
+      asset,
+      sellDate: tx.date,
+      buyDate: tx.date, // Approximate - in real scenario would link to buy date
+      units,
+      costBasis,
+      saleValue: value,
+      gainLoss: grossProfit,
+      taxAmount: baseTax + surcharge + cess,
+      fy
+    });
+
     agg.sellValue += value;
     agg.costBasis += costBasis;
     agg.grossPL += grossProfit;
@@ -606,6 +731,7 @@ const computePortfolio = (portfolio) => {
   return {
     sorted,
     holdingsByAsset,
+    sellTxs,
     fy: Array.from(fyAgg.values()).sort((a, b) => a.fy.localeCompare(b.fy))
   };
 };
@@ -734,6 +860,120 @@ const renderPortfolio = () => {
   });
 };
 
+const renderWithdrawals = () => {
+  if (!withdrawalTbodyEl) return;
+  const data = loadWithdrawals();
+  const withdrawals = (data.withdrawals || []).sort((a, b) => parseDateMs(b.date) - parseDateMs(a.date));
+
+  withdrawalTbodyEl.innerHTML = "";
+  let totalFees = 0;
+
+  withdrawals.forEach((w, i) => {
+    const tr = document.createElement("tr");
+    const date = w.date || "";
+    const bank = (w.bank || "").toString();
+    const amount = parseFloat(w.amount);
+    const mode = (w.mode || "").toString();
+    const fee = parseFloat(w.fee);
+    const notes = (w.notes || "").toString();
+
+    totalFees += fee;
+
+    const cells = [
+      date,
+      bank,
+      Number.isFinite(amount) ? formatINR(amount) : "—",
+      mode.toUpperCase(),
+      Number.isFinite(fee) ? formatINR(fee) : "—",
+      notes
+    ];
+
+    cells.forEach((c) => {
+      const td = document.createElement("td");
+      td.textContent = c;
+      tr.appendChild(td);
+    });
+
+    const tdBtn = document.createElement("td");
+    const del = document.createElement("button");
+    del.type = "button";
+    del.textContent = "Del";
+    del.className = "secondary-btn";
+    del.style.padding = "4px 8px";
+    del.addEventListener("click", () => {
+      data.withdrawals.splice(i, 1);
+      saveWithdrawals(data);
+      renderWithdrawals();
+      showToast("Withdrawal deleted.", "success");
+    });
+    tdBtn.appendChild(del);
+    tr.appendChild(tdBtn);
+
+    withdrawalTbodyEl.appendChild(tr);
+  });
+
+  if (totalWithdrawalFeesEl) {
+    totalWithdrawalFeesEl.textContent = formatINR(totalFees);
+  }
+};
+
+const renderStaking = () => {
+  if (!stakingTbodyEl) return;
+  const data = loadStaking();
+  const entries = (data.entries || []).sort((a, b) => parseDateMs(b.date) - parseDateMs(a.date));
+
+  stakingTbodyEl.innerHTML = "";
+  let totalValue = 0;
+
+  entries.forEach((e, i) => {
+    const tr = document.createElement("tr");
+    const date = e.date || "";
+    const type = (e.type || "").toString();
+    const asset = normalizeAsset(e.asset);
+    const units = parseFloat(e.units);
+    const value = parseFloat(e.value);
+    const notes = (e.notes || "").toString();
+
+    totalValue += Number.isFinite(value) ? value : 0;
+
+    const cells = [
+      date,
+      type,
+      asset,
+      Number.isFinite(units) ? formatUnits(units) : "—",
+      Number.isFinite(value) ? formatINR(value) : "—",
+      notes
+    ];
+
+    cells.forEach((c) => {
+      const td = document.createElement("td");
+      td.textContent = c;
+      tr.appendChild(td);
+    });
+
+    const tdBtn = document.createElement("td");
+    const del = document.createElement("button");
+    del.type = "button";
+    del.textContent = "Del";
+    del.className = "secondary-btn";
+    del.style.padding = "4px 8px";
+    del.addEventListener("click", () => {
+      data.entries.splice(i, 1);
+      saveStaking(data);
+      renderStaking();
+      showToast("Income entry deleted.", "success");
+    });
+    tdBtn.appendChild(del);
+    tr.appendChild(tdBtn);
+
+    stakingTbodyEl.appendChild(tr);
+  });
+
+  if (stakingTotalEl) {
+    stakingTotalEl.textContent = formatINR(totalValue);
+  }
+};
+
 const addPortfolioTx = () => {
   if (!txDateInput || !txTypeSelect || !txUnitsInput || !txPriceInput) return;
 
@@ -827,6 +1067,405 @@ const exportPortfolioFyCsv = () => {
   });
   downloadTextFile("portfolio-fy-summary.csv", toCsv(rows), "text/csv");
   showToast("FY summary CSV downloaded.", "success");
+};
+
+const exportScheduleFa = () => {
+  const p = loadPortfolio();
+  const { sellTxs, fy } = computePortfolio(p);
+  
+  // Schedule FA format for ITR: Asset, Mode, Cost of Acquisition, Cost of Improvement, Sale Value, Expense of Transfer, Gain/Loss
+  const rows = [
+    ["Schedule FA - Capital Gains", ""], // Title
+    ["", ""],
+    ["Asset Description", "Mode", "Date of Acquisition", "Date of Transfer", "Cost of Acquisition (₹)", "Sale Value (₹)", "Gain/(Loss) (₹)", "Tax on Gain (₹)", "FY"]
+  ];
+
+  const processedAssets = new Map();
+
+  sellTxs.forEach((tx) => {
+    const asset = normalizeAsset(tx.asset);
+    const key = `${asset}-${tx.sellDate}`;
+    if (processedAssets.has(key)) return;
+    processedAssets.set(key, true);
+
+    rows.push([
+      asset,
+      "VDA (Virtual Digital Asset)",
+      tx.buyDate || "",
+      tx.sellDate || "",
+      parseFloat(tx.costBasis).toFixed(2),
+      parseFloat(tx.saleValue).toFixed(2),
+      parseFloat(tx.gainLoss).toFixed(2),
+      parseFloat(tx.taxAmount || 0).toFixed(2),
+      tx.fy || ""
+    ]);
+  });
+
+  rows.push(["", ""]);
+  rows.push(["FY Summary", ""]);
+  rows.push(["FY", "Total Sale Value (₹)", "Total Cost Basis (₹)", "Gross Gain/(Loss) (₹)", "Tax Payable (₹)", "Net Gain/(Loss) (₹)"]);
+
+  fy.forEach((r) => {
+    rows.push([
+      r.fy,
+      parseFloat(r.sellValue).toFixed(2),
+      parseFloat(r.costBasis).toFixed(2),
+      parseFloat(r.grossPL).toFixed(2),
+      (parseFloat(r.tax) + parseFloat(r.surcharge) + parseFloat(r.cess)).toFixed(2),
+      parseFloat(r.netPL).toFixed(2)
+    ]);
+  });
+
+  rows.push(["", ""]);
+  rows.push(["Notes:", ""]);
+  rows.push(["1. Mode: VDA = Virtual Digital Asset (per Indian tax law)", ""]);
+  rows.push(["2. All gains/losses are calculated as per IT Act Section 94A (30% flat tax on gains)", ""]);
+  rows.push(["3. This export is for reference only - consult your CA for actual ITR filing", ""]);
+  rows.push(["4. TDS may apply if applicable under Section 194O (if transaction value > threshold)", ""]);
+
+  downloadTextFile("schedule-fa-capital-gains.csv", toCsv(rows), "text/csv");
+  showToast("Schedule FA (ITR) CSV downloaded. Consult your CA for filing.", "success");
+};
+
+const exportWithdrawalsCsv = () => {
+  const data = loadWithdrawals();
+  const withdrawals = (data.withdrawals || []).sort((a, b) => parseDateMs(a.date) - parseDateMs(b.date));
+  const rows = [
+    ["date", "bank", "amount_inr", "mode", "fee_inr", "notes"]
+  ];
+
+  withdrawals.forEach((w) => {
+    rows.push([
+      w.date || "",
+      w.bank || "",
+      w.amount || "",
+      w.mode || "",
+      w.fee || "",
+      w.notes || ""
+    ]);
+  });
+
+  rows.push(["", "", "", "", "", ""]);
+  const totalFee = withdrawals.reduce((sum, w) => sum + (parseFloat(w.fee) || 0), 0);
+  rows.push(["", "TOTAL FEES", "", "", totalFee.toFixed(2), ""]);
+
+  downloadTextFile("withdrawals.csv", toCsv(rows), "text/csv");
+  showToast("Withdrawals CSV downloaded.", "success");
+};
+
+const exportStakingCsv = () => {
+  const data = loadStaking();
+  const entries = (data.entries || []).sort((a, b) => parseDateMs(a.date) - parseDateMs(b.date));
+  const rows = [
+    ["date", "type", "asset", "units", "value_inr", "notes"]
+  ];
+  entries.forEach((e) => {
+    rows.push([
+      e.date || "",
+      e.type || "",
+      normalizeAsset(e.asset),
+      e.units || "",
+      e.value || "",
+      e.notes || ""
+    ]);
+  });
+  downloadTextFile("staking-income.csv", toCsv(rows), "text/csv");
+  showToast("Staking income CSV downloaded.", "success");
+};
+
+const buildCaReport = () => {
+  const portfolio = loadPortfolio();
+  const computed = computePortfolio(portfolio);
+  const withdrawals = loadWithdrawals();
+  const staking = loadStaking();
+
+  return {
+    generatedAt: new Date().toISOString(),
+    portfolio: {
+      method: portfolio.method,
+      transactions: portfolio.transactions || [],
+      fySummary: computed.fy
+    },
+    withdrawals: withdrawals.withdrawals || [],
+    stakingIncome: staking.entries || [],
+    notes: [
+      "Generated by Crypto-Calc",
+      "Review with your CA before filing"
+    ]
+  };
+};
+
+const exportCaReport = () => {
+  const report = buildCaReport();
+  downloadTextFile("ca-report.json", JSON.stringify(report, null, 2), "application/json");
+
+  const fyLines = (report.portfolio.fySummary || []).map((r) =>
+    `${r.fy}: Sell=${r.sellValue}, Cost=${r.costBasis}, Net=${r.netPL}`
+  );
+  const summary = [
+    "Crypto-Calc CA Report",
+    `Generated: ${report.generatedAt}`,
+    "",
+    "FY Summary:",
+    ...fyLines,
+    "",
+    `Withdrawals: ${report.withdrawals.length}`,
+    `Staking Income Records: ${report.stakingIncome.length}`
+  ].join("\n");
+  downloadTextFile("ca-report.txt", summary, "text/plain");
+  showToast("CA report exported (JSON + TXT).", "success");
+};
+
+const encryptWithPassword = async (plaintext, password) => {
+  const enc = new TextEncoder();
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+
+  const keyMaterial = await crypto.subtle.importKey(
+    "raw",
+    enc.encode(password),
+    "PBKDF2",
+    false,
+    ["deriveKey"]
+  );
+  const key = await crypto.subtle.deriveKey(
+    {
+      name: "PBKDF2",
+      salt,
+      iterations: 100000,
+      hash: "SHA-256"
+    },
+    keyMaterial,
+    { name: "AES-GCM", length: 256 },
+    false,
+    ["encrypt"]
+  );
+
+  const ciphertext = await crypto.subtle.encrypt(
+    { name: "AES-GCM", iv },
+    key,
+    enc.encode(plaintext)
+  );
+
+  const payload = {
+    v: 1,
+    salt: Array.from(salt),
+    iv: Array.from(iv),
+    data: Array.from(new Uint8Array(ciphertext))
+  };
+
+  return JSON.stringify(payload);
+};
+
+const exportCaReportEncrypted = async () => {
+  const password = window.prompt("Set a password to encrypt the CA report:");
+  if (!password) {
+    showToast("Password is required for encryption.", "error");
+    return;
+  }
+  const report = buildCaReport();
+  const encrypted = await encryptWithPassword(JSON.stringify(report), password);
+  downloadTextFile("ca-report.enc.json", encrypted, "application/json");
+  showToast("Encrypted CA report downloaded.", "success");
+};
+
+const parseCsvLine = (line) => {
+  const result = [];
+  let current = "";
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i += 1) {
+    const ch = line[i];
+    if (ch === "\"") {
+      if (inQuotes && line[i + 1] === "\"") {
+        current += "\"";
+        i += 1;
+      } else {
+        inQuotes = !inQuotes;
+      }
+    } else if (ch === "," && !inQuotes) {
+      result.push(current);
+      current = "";
+    } else {
+      current += ch;
+    }
+  }
+  result.push(current);
+  return result.map((s) => s.trim());
+};
+
+const importCsvTransactions = (text) => {
+  const lines = text.split(/\r?\n/).filter((l) => l.trim().length);
+  if (!lines.length) return { error: "CSV is empty." };
+
+  const headers = parseCsvLine(lines[0]).map((h) => h.toLowerCase());
+  const idx = (name) => headers.indexOf(name);
+
+  const map = {
+    date: idx("date") >= 0 ? "date" : idx("time") >= 0 ? "time" : idx("created_at") >= 0 ? "created_at" : null,
+    type: idx("type") >= 0 ? "type" : idx("side") >= 0 ? "side" : idx("trade_type") >= 0 ? "trade_type" : null,
+    asset: idx("asset") >= 0 ? "asset" : idx("symbol") >= 0 ? "symbol" : idx("coin") >= 0 ? "coin" : idx("market") >= 0 ? "market" : null,
+    units: idx("units") >= 0 ? "units" : idx("qty") >= 0 ? "qty" : idx("quantity") >= 0 ? "quantity" : idx("amount") >= 0 ? "amount" : null,
+    price: idx("price_inr") >= 0 ? "price_inr" : idx("price") >= 0 ? "price" : idx("rate") >= 0 ? "rate" : idx("price_per_unit") >= 0 ? "price_per_unit" : null,
+    feePercent: idx("fee_percent") >= 0 ? "fee_percent" : null,
+    gstOnFee: idx("gst_on_fee") >= 0 ? "gst_on_fee" : null,
+    notes: idx("notes") >= 0 ? "notes" : null
+  };
+
+  if (!map.date || !map.type || !map.asset || !map.units || !map.price) {
+    return { error: "CSV must include date, type, asset, units, price columns." };
+  }
+
+  const get = (row, key) => {
+    const i = headers.indexOf(map[key]);
+    return i >= 0 ? row[i] : "";
+  };
+
+  const txs = [];
+  for (let i = 1; i < lines.length; i += 1) {
+    const row = parseCsvLine(lines[i]);
+    const rawType = get(row, "type").toLowerCase();
+    const type = rawType.includes("sell") ? "sell" : "buy";
+    const assetRaw = get(row, "asset");
+    const asset = assetRaw.includes("/") ? assetRaw.split("/")[0] : assetRaw.includes("-") ? assetRaw.split("-")[0] : assetRaw;
+    txs.push({
+      date: get(row, "date"),
+      type,
+      asset: normalizeAsset(asset),
+      units: parseFloat(get(row, "units")) || 0,
+      price: parseFloat(get(row, "price")) || 0,
+      feePercent: parseFloat(get(row, "feePercent")) || 0,
+      gstEnabled: String(get(row, "gstOnFee")).toLowerCase() === "yes",
+      notes: get(row, "notes") || ""
+    });
+  }
+
+  return { txs };
+};
+
+const addSwapTransaction = () => {
+  if (!swapDateInput) return;
+  const date = swapDateInput.value;
+  const fromAsset = normalizeAsset(swapFromAssetInput?.value || "");
+  const fromUnits = parseFloat(swapFromUnitsInput?.value || "");
+  const fromPrice = parseFloat(swapFromPriceInput?.value || "");
+  const toAsset = normalizeAsset(swapToAssetInput?.value || "");
+  const toUnits = parseFloat(swapToUnitsInput?.value || "");
+  const toPrice = parseFloat(swapToPriceInput?.value || "");
+  const feePercent = parseFloat(swapFeePercentInput?.value || "0");
+  const gstEnabled = !!swapGstEnabledInput?.checked;
+  const notes = (swapNotesInput?.value || "").toString().trim();
+
+  if (!date || !fromAsset || !toAsset || !(fromUnits > 0) || !(fromPrice > 0) || !(toUnits > 0) || !(toPrice > 0)) {
+    showToast("Fill all swap fields with valid values.", "error");
+    return;
+  }
+
+  const p = loadPortfolio();
+  p.transactions = Array.isArray(p.transactions) ? p.transactions : [];
+  const idBase = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  p.transactions.push({
+    id: `${idBase}-sell`,
+    date,
+    type: "sell",
+    asset: fromAsset,
+    units: fromUnits,
+    price: fromPrice,
+    feePercent: Number.isFinite(feePercent) ? feePercent : 0,
+    gstEnabled,
+    notes: `Swap out to ${toAsset}. ${notes}`.trim()
+  });
+  p.transactions.push({
+    id: `${idBase}-buy`,
+    date,
+    type: "buy",
+    asset: toAsset,
+    units: toUnits,
+    price: toPrice,
+    feePercent: 0,
+    gstEnabled: false,
+    notes: `Swap in from ${fromAsset}. ${notes}`.trim()
+  });
+
+  savePortfolio(p);
+  renderPortfolio();
+  showToast("Swap recorded as Sell + Buy.", "success");
+};
+
+const addStakingIncome = () => {
+  if (!stakingDateInput || !stakingTypeSelect || !stakingAssetInput || !stakingValueInput) return;
+  const date = stakingDateInput.value;
+  const type = stakingTypeSelect.value;
+  const asset = normalizeAsset(stakingAssetInput.value);
+  const units = parseFloat(stakingUnitsInput?.value || "0");
+  const value = parseFloat(stakingValueInput.value);
+  const notes = (stakingNotesInput?.value || "").toString().trim();
+
+  if (!date || !asset || !(value > 0)) {
+    if (stakingMessageEl) stakingMessageEl.textContent = "Please fill date, asset and value.";
+    showToast("Enter date, asset and INR value.", "error");
+    return;
+  }
+
+  const data = loadStaking();
+  data.entries = Array.isArray(data.entries) ? data.entries : [];
+  data.entries.push({ date, type, asset, units, value, notes });
+  saveStaking(data);
+
+  if (stakingMessageEl) stakingMessageEl.textContent = "";
+  if (stakingUnitsInput) stakingUnitsInput.value = "";
+  if (stakingValueInput) stakingValueInput.value = "";
+  if (stakingNotesInput) stakingNotesInput.value = "";
+
+  renderStaking();
+  showToast("Income entry added.", "success");
+};
+
+const calculateDerivatives = () => {
+  const entry = parseFloat(entryPriceInput?.value || "");
+  const exit = parseFloat(exitPriceInput?.value || "");
+  const qty = parseFloat(contractQtyInput?.value || "");
+  const size = parseFloat(contractSizeInput?.value || "1");
+  const fees = parseFloat(fundingFeesInput?.value || "0");
+  const side = positionSideSelect?.value === "short" ? -1 : 1;
+
+  if (!(entry > 0) || !(exit > 0) || !(qty > 0) || !(size > 0)) {
+    showToast("Enter valid derivatives inputs.", "error");
+    return;
+  }
+
+  const gross = (exit - entry) * qty * size * side;
+  const net = gross - (Number.isFinite(fees) ? fees : 0);
+  const margin = (entry * qty * size) / Math.max(1, parseFloat(leverageInput?.value || "1"));
+  const roi = margin > 0 ? (net / margin) * 100 : 0;
+
+  if (derivativeGrossEl) derivativeGrossEl.textContent = formatINR(gross);
+  if (derivativeNetEl) derivativeNetEl.textContent = formatINR(net);
+  if (derivativeRoiEl) derivativeRoiEl.textContent = `${roi.toFixed(2)}%`;
+};
+
+const toHex = (buf) => Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("");
+
+const hmacSha256 = async (secret, message) => {
+  const enc = new TextEncoder();
+  const key = await crypto.subtle.importKey("raw", enc.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const sig = await crypto.subtle.sign("HMAC", key, enc.encode(message));
+  return toHex(sig);
+};
+
+const importWazirxTrades = async (apiKey, apiSecret) => {
+  const recvWindow = 60000;
+  const timestamp = Date.now();
+  const query = `timestamp=${timestamp}&recvWindow=${recvWindow}`;
+  const signature = await hmacSha256(apiSecret, query);
+  const url = `https://api.wazirx.com/sapi/v1/user/trades?${query}&signature=${signature}`;
+
+  const res = await fetch(url, {
+    headers: {
+      "X-API-KEY": apiKey
+    }
+  });
+  if (!res.ok) throw new Error(`API error: ${res.status}`);
+  return res.json();
 };
 
 const formatINR = (value) =>
@@ -1907,6 +2546,133 @@ clearPortfolioBtn?.addEventListener("click", () => {
 
 exportTxCsvBtn?.addEventListener("click", exportPortfolioTxCsv);
 exportFyCsvBtn?.addEventListener("click", exportPortfolioFyCsv);
+exportScheduleFaBtn?.addEventListener("click", exportScheduleFa);
+exportCaReportBtn?.addEventListener("click", exportCaReport);
+exportCaReportEncryptedBtn?.addEventListener("click", () => {
+  exportCaReportEncrypted().catch((err) => {
+    showToast(err?.message || "Failed to encrypt report.", "error");
+  });
+});
+
+addSwapBtn?.addEventListener("click", addSwapTransaction);
+addStakingIncomeBtn?.addEventListener("click", addStakingIncome);
+clearStakingIncomeBtn?.addEventListener("click", () => {
+  saveStaking({ entries: [] });
+  renderStaking();
+  showToast("Staking income cleared.", "success");
+});
+exportStakingCsvBtn?.addEventListener("click", exportStakingCsv);
+
+importCsvBtn?.addEventListener("click", async () => {
+  const file = importCsvInput?.files?.[0];
+  if (!file) {
+    setMessage(importCsvMessageEl, "Please choose a CSV file.");
+    showToast("Select a CSV file to import.", "error");
+    return;
+  }
+  const text = await file.text();
+  const result = importCsvTransactions(text);
+  if (result.error) {
+    setMessage(importCsvMessageEl, result.error);
+    showToast(result.error, "error");
+    return;
+  }
+
+  const mode = importCsvModeSelect?.value === "replace" ? "replace" : "append";
+  const p = loadPortfolio();
+  const txs = result.txs || [];
+  p.transactions = mode === "replace" ? txs : [...(p.transactions || []), ...txs];
+  savePortfolio(p);
+  renderPortfolio();
+  setMessage(importCsvMessageEl, `Imported ${txs.length} transactions.`);
+  showToast("CSV import complete.", "success");
+});
+
+apiImportBtn?.addEventListener("click", async () => {
+  const exchange = apiExchangeSelect?.value || "wazirx";
+  const apiKey = apiKeyInput?.value?.trim();
+  const apiSecret = apiSecretInput?.value?.trim();
+  if (!apiKey || !apiSecret) {
+    setMessage(apiImportMessageEl, "API key and secret are required.");
+    showToast("Enter API key and secret.", "error");
+    return;
+  }
+  setMessage(apiImportMessageEl, "Fetching trades... (may be blocked by CORS)");
+  try {
+    if (exchange !== "wazirx") {
+      throw new Error("Only WazirX API import is available in this build.");
+    }
+    const trades = await importWazirxTrades(apiKey, apiSecret);
+    const txs = Array.isArray(trades)
+      ? trades.map((t) => ({
+        date: new Date(t.time || t.created_at || Date.now()).toISOString().slice(0, 10),
+        type: t.type === "sell" ? "sell" : "buy",
+        asset: normalizeAsset((t.market || t.symbol || "").split(/[/-]/)[0] || ""),
+        units: parseFloat(t.quantity || t.qty || 0),
+        price: parseFloat(t.price || t.rate || 0),
+        feePercent: 0,
+        gstEnabled: false,
+        notes: `API import (${exchange})`
+      }))
+      : [];
+
+    if (!txs.length) throw new Error("No trades returned from API.");
+    const p = loadPortfolio();
+    p.transactions = [...(p.transactions || []), ...txs];
+    savePortfolio(p);
+    renderPortfolio();
+    setMessage(apiImportMessageEl, `Imported ${txs.length} trades.`);
+    showToast("API import complete.", "success");
+  } catch (err) {
+    setMessage(apiImportMessageEl, err?.message || "API import failed.");
+    showToast("API import failed. Use CSV import if blocked.", "error");
+  }
+});
+
+calculateDerivativesBtn?.addEventListener("click", calculateDerivatives);
+
+// Bank Withdrawal Tracker Event Listeners
+addWithdrawalBtn?.addEventListener("click", () => {
+  if (!withdrawalDateInput || !withdrawalBankInput || !withdrawalAmountInput || !withdrawalModeSelect || !withdrawalFeeInput) return;
+
+  const date = withdrawalDateInput.value;
+  const bank = withdrawalBankInput.value.trim();
+  const amount = parseFloat(withdrawalAmountInput.value);
+  const mode = withdrawalModeSelect.value;
+  const fee = parseFloat(withdrawalFeeInput.value);
+  const notes = withdrawalNotesInput?.value.trim() || "";
+
+  if (!date || !bank || !Number.isFinite(amount) || amount <= 0 || !Number.isFinite(fee) || fee < 0) {
+    showToast("Fill all required fields (date, bank, amount, fee).", "error");
+    return;
+  }
+
+  const data = loadWithdrawals();
+  data.withdrawals = Array.isArray(data.withdrawals) ? data.withdrawals : [];
+  data.withdrawals.push({ date, bank, amount, mode, fee, notes });
+  saveWithdrawals(data);
+
+  // Clear form
+  withdrawalDateInput.value = "";
+  withdrawalBankInput.value = "";
+  withdrawalAmountInput.value = "";
+  withdrawalModeSelect.value = "neft";
+  withdrawalFeeInput.value = "";
+  if (withdrawalNotesInput) withdrawalNotesInput.value = "";
+
+  renderWithdrawals();
+  showToast("Withdrawal added.", "success");
+});
+
+clearWithdrawalsBtn?.addEventListener("click", () => {
+  const ok = window.confirm("Clear all withdrawals?");
+  if (!ok) return;
+  saveWithdrawals({ withdrawals: [] });
+  renderWithdrawals();
+  showToast("Withdrawals cleared.", "success");
+});
+
+exportWithdrawalsCsvBtn?.addEventListener("click", exportWithdrawalsCsv);
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", async () => {
@@ -1933,7 +2699,21 @@ if (txDateInput) {
   const today = new Date();
   txDateInput.value = today.toISOString().slice(0, 10);
 }
+if (withdrawalDateInput) {
+  const today = new Date();
+  withdrawalDateInput.value = today.toISOString().slice(0, 10);
+}
+if (swapDateInput) {
+  const today = new Date();
+  swapDateInput.value = today.toISOString().slice(0, 10);
+}
+if (stakingDateInput) {
+  const today = new Date();
+  stakingDateInput.value = today.toISOString().slice(0, 10);
+}
 renderPortfolio();
+renderWithdrawals();
+renderStaking();
 fetchUsdInrRate({ silent: true });
 fetchLivePrice(buyCoinSelect.value);
 
