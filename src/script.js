@@ -103,6 +103,12 @@ const portfolioMessageEl = document.getElementById("portfolioMessage");
 const txTbodyEl = document.getElementById("txTbody");
 const fyTbodyEl = document.getElementById("fyTbody");
 const portfolioSummaryEl = document.getElementById("portfolioSummary");
+const profileSelect = document.getElementById("profileSelect");
+const profileNameInput = document.getElementById("profileName");
+const addProfileBtn = document.getElementById("addProfile");
+const renameProfileBtn = document.getElementById("renameProfile");
+const deleteProfileBtn = document.getElementById("deleteProfile");
+const profileMessageEl = document.getElementById("profileMessage");
 
 // Swap Elements
 const swapDateInput = document.getElementById("swapDate");
@@ -120,15 +126,39 @@ const addSwapBtn = document.getElementById("addSwap");
 // CSV Import Elements
 const importCsvInput = document.getElementById("importCsv");
 const importCsvModeSelect = document.getElementById("importCsvMode");
+const importCsvFormatSelect = document.getElementById("importCsvFormat");
 const importCsvBtn = document.getElementById("importCsvBtn");
 const importCsvMessageEl = document.getElementById("importCsvMessage");
 
 // API Import Elements
 const apiExchangeSelect = document.getElementById("apiExchange");
+const apiStartDateInput = document.getElementById("apiStartDate");
+const apiEndDateInput = document.getElementById("apiEndDate");
 const apiKeyInput = document.getElementById("apiKey");
 const apiSecretInput = document.getElementById("apiSecret");
 const apiImportBtn = document.getElementById("apiImportBtn");
 const apiImportMessageEl = document.getElementById("apiImportMessage");
+
+// Harvesting & Analytics Elements
+const harvestTbodyEl = document.getElementById("harvestTbody");
+const harvestTotalEl = document.getElementById("harvestTotal");
+const harvestSummaryEl = document.getElementById("harvestSummary");
+const fyChartEl = document.getElementById("fyChart");
+const fyChartLegendEl = document.getElementById("fyChartLegend");
+const monthlyChartEl = document.getElementById("monthlyChart");
+const monthlyChartLegendEl = document.getElementById("monthlyChartLegend");
+
+// Historical price lookup
+const historyCoinIdInput = document.getElementById("historyCoinId");
+const historyDateInput = document.getElementById("historyDate");
+const historyTargetSelect = document.getElementById("historyTarget");
+const historyUseCurrentBtn = document.getElementById("historyUseCurrent");
+const historyFetchBtn = document.getElementById("historyFetchBtn");
+const historyMessageEl = document.getElementById("historyMessage");
+
+// CA report review
+const caReportFileInput = document.getElementById("caReportFile");
+const caReportSummaryEl = document.getElementById("caReportSummary");
 
 // Staking/Income Elements
 const stakingDateInput = document.getElementById("stakingDate");
@@ -218,6 +248,8 @@ const PRICE_CACHE_TTL_MS = 25_000;
 const FX_CACHE_TTL_MS = 12 * 60 * 60_000;
 
 const EXCHANGE_FEE_KEY = "cryptoCalcExchangeFees";
+const PROFILES_KEY = "cryptoCalcProfiles";
+const HARVEST_PRICE_KEY = "cryptoCalcHarvestPrices";
 
 // Default exchange fee presets (in percent)
 const DEFAULT_EXCHANGE_FEES = {
@@ -231,9 +263,9 @@ const DEFAULT_EXCHANGE_FEES = {
 const PREFS_KEY = "cryptoCalcPreferences";
 const PRICE_CACHE_KEY = "cryptoCalcPriceCache";
 const FX_CACHE_KEY = "cryptoCalcFxCache";
-const PORTFOLIO_KEY = "cryptoCalcPortfolio";
-const WITHDRAWALS_KEY = "cryptoCalcWithdrawals";
-const STAKING_KEY = "cryptoCalcStaking";
+const PORTFOLIO_KEY_BASE = "cryptoCalcPortfolio";
+const WITHDRAWALS_KEY_BASE = "cryptoCalcWithdrawals";
+const STAKING_KEY_BASE = "cryptoCalcStaking";
 
 let toastTimer = null;
 
@@ -260,6 +292,85 @@ const getPrefs = () => {
 const savePrefs = (partial) => {
   const next = { ...getPrefs(), ...partial };
   localStorage.setItem(PREFS_KEY, JSON.stringify(next));
+};
+
+const loadProfiles = () => {
+  try {
+    const raw = localStorage.getItem(PROFILES_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed?.profiles) || !parsed.profiles.length) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+};
+
+const saveProfiles = (data) => {
+  localStorage.setItem(PROFILES_KEY, JSON.stringify(data));
+};
+
+const ensureProfiles = () => {
+  const existing = loadProfiles();
+  if (existing) return existing;
+  const defaultProfile = { id: "default", name: "Default" };
+  const data = { profiles: [defaultProfile], activeId: defaultProfile.id };
+  saveProfiles(data);
+  return data;
+};
+
+const getActiveProfileId = () => {
+  const data = ensureProfiles();
+  const activeId = data.activeId;
+  const valid = data.profiles.find((p) => p.id === activeId);
+  return valid ? activeId : data.profiles[0].id;
+};
+
+const setActiveProfileId = (id) => {
+  const data = ensureProfiles();
+  const valid = data.profiles.find((p) => p.id === id);
+  data.activeId = valid ? id : data.profiles[0].id;
+  saveProfiles(data);
+  return data.activeId;
+};
+
+const profileStorageKey = (baseKey) => `${baseKey}:${getActiveProfileId()}`;
+
+const migrateLegacyStorage = () => {
+  const data = ensureProfiles();
+  const activeId = data.activeId;
+  const legacyPortfolio = localStorage.getItem(PORTFOLIO_KEY_BASE);
+  const legacyStaking = localStorage.getItem(STAKING_KEY_BASE);
+  const legacyWithdrawals = localStorage.getItem(WITHDRAWALS_KEY_BASE);
+
+  const targetPortfolioKey = `${PORTFOLIO_KEY_BASE}:${activeId}`;
+  const targetStakingKey = `${STAKING_KEY_BASE}:${activeId}`;
+  const targetWithdrawalsKey = `${WITHDRAWALS_KEY_BASE}:${activeId}`;
+
+  if (legacyPortfolio && !localStorage.getItem(targetPortfolioKey)) {
+    localStorage.setItem(targetPortfolioKey, legacyPortfolio);
+  }
+  if (legacyStaking && !localStorage.getItem(targetStakingKey)) {
+    localStorage.setItem(targetStakingKey, legacyStaking);
+  }
+  if (legacyWithdrawals && !localStorage.getItem(targetWithdrawalsKey)) {
+    localStorage.setItem(targetWithdrawalsKey, legacyWithdrawals);
+  }
+};
+
+const getHarvestPriceCache = () => {
+  try {
+    const stored = localStorage.getItem(HARVEST_PRICE_KEY);
+    return stored ? JSON.parse(stored) : {};
+  } catch {
+    return {};
+  }
+};
+
+const setHarvestPriceCache = (asset, price) => {
+  const cache = getHarvestPriceCache();
+  cache[asset] = price;
+  localStorage.setItem(HARVEST_PRICE_KEY, JSON.stringify(cache));
 };
 
 const formatTime = (ts) => {
@@ -454,8 +565,9 @@ const applyPreferences = () => {
 };
 
 const loadPortfolio = () => {
+  migrateLegacyStorage();
   try {
-    const stored = localStorage.getItem(PORTFOLIO_KEY);
+    const stored = localStorage.getItem(profileStorageKey(PORTFOLIO_KEY_BASE));
     if (!stored) return { method: "fifo", transactions: [] };
     const parsed = JSON.parse(stored);
     const method = parsed?.method === "avg" ? "avg" : "fifo";
@@ -467,13 +579,14 @@ const loadPortfolio = () => {
 };
 
 const savePortfolio = (portfolio) => {
-  localStorage.setItem(PORTFOLIO_KEY, JSON.stringify(portfolio));
+  localStorage.setItem(profileStorageKey(PORTFOLIO_KEY_BASE), JSON.stringify(portfolio));
 };
 
 // Bank Withdrawal Management
 const loadWithdrawals = () => {
+  migrateLegacyStorage();
   try {
-    const stored = localStorage.getItem(WITHDRAWALS_KEY);
+    const stored = localStorage.getItem(profileStorageKey(WITHDRAWALS_KEY_BASE));
     return stored ? JSON.parse(stored) : { withdrawals: [] };
   } catch {
     return { withdrawals: [] };
@@ -481,13 +594,14 @@ const loadWithdrawals = () => {
 };
 
 const saveWithdrawals = (withdrawalsData) => {
-  localStorage.setItem(WITHDRAWALS_KEY, JSON.stringify(withdrawalsData));
+  localStorage.setItem(profileStorageKey(WITHDRAWALS_KEY_BASE), JSON.stringify(withdrawalsData));
 };
 
 // Staking/Income Management
 const loadStaking = () => {
+  migrateLegacyStorage();
   try {
-    const stored = localStorage.getItem(STAKING_KEY);
+    const stored = localStorage.getItem(profileStorageKey(STAKING_KEY_BASE));
     return stored ? JSON.parse(stored) : { entries: [] };
   } catch {
     return { entries: [] };
@@ -495,7 +609,93 @@ const loadStaking = () => {
 };
 
 const saveStaking = (stakingData) => {
-  localStorage.setItem(STAKING_KEY, JSON.stringify(stakingData));
+  localStorage.setItem(profileStorageKey(STAKING_KEY_BASE), JSON.stringify(stakingData));
+};
+
+const renderProfileSelect = () => {
+  if (!profileSelect) return;
+  const data = ensureProfiles();
+  const activeId = getActiveProfileId();
+  profileSelect.innerHTML = "";
+  data.profiles.forEach((p) => {
+    const opt = document.createElement("option");
+    opt.value = p.id;
+    opt.textContent = p.name;
+    profileSelect.appendChild(opt);
+  });
+  profileSelect.value = activeId;
+};
+
+const syncPortfolioMethodInput = () => {
+  if (!portfolioMethodSelect) return;
+  const p = loadPortfolio();
+  portfolioMethodSelect.value = p.method === "avg" ? "avg" : "fifo";
+};
+
+const setProfileMessage = (msg, isError = false) => {
+  if (!profileMessageEl) return;
+  profileMessageEl.textContent = msg;
+  profileMessageEl.style.color = isError ? "#b42318" : "#0f5132";
+};
+
+const createProfile = () => {
+  const name = (profileNameInput?.value || "").toString().trim();
+  if (!name) {
+    setProfileMessage("Enter a profile name.", true);
+    return;
+  }
+  const data = ensureProfiles();
+  const id = `p_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`;
+  data.profiles.push({ id, name });
+  data.activeId = id;
+  saveProfiles(data);
+  if (profileNameInput) profileNameInput.value = "";
+  renderProfileSelect();
+  renderPortfolio();
+  renderWithdrawals();
+  renderStaking();
+  setProfileMessage("Profile created.");
+  showToast("Profile created.", "success");
+};
+
+const renameProfile = () => {
+  const name = (profileNameInput?.value || "").toString().trim();
+  if (!name) {
+    setProfileMessage("Enter a new name.", true);
+    return;
+  }
+  const data = ensureProfiles();
+  const activeId = getActiveProfileId();
+  const profile = data.profiles.find((p) => p.id === activeId);
+  if (!profile) return;
+  profile.name = name;
+  saveProfiles(data);
+  if (profileNameInput) profileNameInput.value = "";
+  renderProfileSelect();
+  setProfileMessage("Profile renamed.");
+  showToast("Profile renamed.", "success");
+};
+
+const deleteProfile = () => {
+  const data = ensureProfiles();
+  if (data.profiles.length <= 1) {
+    setProfileMessage("At least one profile is required.", true);
+    return;
+  }
+  const activeId = getActiveProfileId();
+  const profile = data.profiles.find((p) => p.id === activeId);
+  const label = profile?.name || "this profile";
+  const ok = window.confirm(`Delete ${label}? This cannot be undone.`);
+  if (!ok) return;
+  data.profiles = data.profiles.filter((p) => p.id !== activeId);
+  data.activeId = data.profiles[0].id;
+  saveProfiles(data);
+  renderProfileSelect();
+  renderPortfolio();
+  renderWithdrawals();
+  renderStaking();
+  setProfileMessage("Profile deleted.");
+  showToast("Profile deleted.", "success");
 };
 
 const normalizeAsset = (raw) => {
@@ -712,6 +912,7 @@ const computePortfolio = (portfolio) => {
       costBasis,
       saleValue: value,
       gainLoss: grossProfit,
+      netProfit,
       taxAmount: baseTax + surcharge + cess,
       fy
     });
@@ -736,10 +937,138 @@ const computePortfolio = (portfolio) => {
   };
 };
 
+const renderHarvestTable = (holdingsByAsset) => {
+  if (!harvestTbodyEl || !harvestTotalEl || !harvestSummaryEl) return;
+  const cache = getHarvestPriceCache();
+  harvestTbodyEl.innerHTML = "";
+  let totalUnrealized = 0;
+
+  const rows = Array.from(holdingsByAsset.entries())
+    .filter(([, h]) => h.units > 1e-12)
+    .sort(([a], [b]) => a.localeCompare(b));
+
+  rows.forEach(([asset, h]) => {
+    const tr = document.createElement("tr");
+    const avgCost = h.units > 0 ? h.totalCost / h.units : 0;
+    const cachedPrice = cache[asset];
+    const price = Number.isFinite(cachedPrice) ? cachedPrice : 0;
+    const unrealized = price > 0 ? (price - avgCost) * h.units : 0;
+    totalUnrealized += unrealized;
+
+    const tdAsset = document.createElement("td");
+    tdAsset.textContent = asset;
+    tr.appendChild(tdAsset);
+
+    const tdUnits = document.createElement("td");
+    tdUnits.textContent = formatUnits(h.units);
+    tr.appendChild(tdUnits);
+
+    const tdAvg = document.createElement("td");
+    tdAvg.textContent = formatINR(avgCost);
+    tr.appendChild(tdAvg);
+
+    const tdPrice = document.createElement("td");
+    const priceInput = document.createElement("input");
+    priceInput.type = "number";
+    priceInput.min = "0";
+    priceInput.step = "0.01";
+    priceInput.className = "table-input";
+    priceInput.placeholder = "Set price";
+    if (price > 0) priceInput.value = price.toFixed(2);
+    priceInput.addEventListener("input", () => {
+      const next = parseFloat(priceInput.value || "0");
+      if (Number.isFinite(next) && next > 0) {
+        setHarvestPriceCache(asset, next);
+      }
+      renderHarvestTable(holdingsByAsset);
+    });
+    tdPrice.appendChild(priceInput);
+    tr.appendChild(tdPrice);
+
+    const tdPl = document.createElement("td");
+    tdPl.textContent = price > 0 ? formatINR(unrealized) : "—";
+    tr.appendChild(tdPl);
+
+    const tdSignal = document.createElement("td");
+    const tag = document.createElement("span");
+    tag.className = `tag${unrealized < 0 ? " negative" : ""}`;
+    tag.textContent = price > 0 ? (unrealized < 0 ? "Loss" : "Gain") : "Set price";
+    tdSignal.appendChild(tag);
+    tr.appendChild(tdSignal);
+
+    harvestTbodyEl.appendChild(tr);
+  });
+
+  harvestTotalEl.textContent = formatINR(totalUnrealized);
+  harvestSummaryEl.textContent = rows.length
+    ? "Set current prices to estimate unrealized gains or losses."
+    : "No holdings available for harvesting analysis.";
+};
+
+const renderBarChart = (container, legendEl, rows) => {
+  if (!container || !legendEl) return;
+  container.innerHTML = "";
+  legendEl.innerHTML = "";
+  if (!rows.length) return;
+
+  const maxAbs = Math.max(...rows.map((r) => Math.abs(r.value)), 1);
+  rows.forEach((row) => {
+    const barRow = document.createElement("div");
+    barRow.className = "bar-row";
+    const label = document.createElement("div");
+    label.textContent = row.label;
+    const track = document.createElement("div");
+    track.className = "bar-track";
+    const fill = document.createElement("div");
+    fill.className = `bar-fill${row.value < 0 ? " negative" : ""}`;
+    fill.style.width = `${(Math.abs(row.value) / maxAbs) * 100}%`;
+    track.appendChild(fill);
+    const value = document.createElement("div");
+    value.textContent = formatINR(row.value);
+    barRow.appendChild(label);
+    barRow.appendChild(track);
+    barRow.appendChild(value);
+    container.appendChild(barRow);
+
+    const legendItem = document.createElement("div");
+    legendItem.className = "legend-item";
+    const color = document.createElement("span");
+    color.className = "legend-color";
+    color.style.background = row.value < 0 ? "#ef4444" : "#3b82f6";
+    const text = document.createElement("span");
+    text.textContent = `${row.label}: ${formatINR(row.value)}`;
+    legendItem.appendChild(color);
+    legendItem.appendChild(text);
+    legendEl.appendChild(legendItem);
+  });
+};
+
+const renderAnalytics = (fy, sellTxs) => {
+  const fyRows = (fy || []).map((row) => ({
+    label: row.fy,
+    value: row.netPL
+  }));
+
+  const monthAgg = new Map();
+  (sellTxs || []).forEach((tx) => {
+    const d = tx.sellDate ? new Date(tx.sellDate) : null;
+    if (!d || !Number.isFinite(d.getTime())) return;
+    const label = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    const current = monthAgg.get(label) || 0;
+    monthAgg.set(label, current + (tx.gainLoss || 0));
+  });
+  const monthlyRows = Array.from(monthAgg.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([label, value]) => ({ label, value }));
+
+  renderBarChart(fyChartEl, fyChartLegendEl, fyRows);
+  renderBarChart(monthlyChartEl, monthlyChartLegendEl, monthlyRows);
+};
+
 const renderPortfolio = () => {
   if (!txTbodyEl || !fyTbodyEl || !portfolioSummaryEl) return;
   const portfolio = loadPortfolio();
-  const { sorted, holdingsByAsset, fy } = computePortfolio(portfolio);
+  const { sorted, holdingsByAsset, fy, sellTxs } = computePortfolio(portfolio);
 
   txTbodyEl.innerHTML = "";
   sorted.forEach((tx) => {
@@ -858,6 +1187,9 @@ const renderPortfolio = () => {
     });
     fyTbodyEl.appendChild(tr);
   });
+
+  renderHarvestTable(holdingsByAsset);
+  renderAnalytics(fy, sellTxs);
 };
 
 const renderWithdrawals = () => {
@@ -1269,6 +1601,16 @@ const exportCaReportEncrypted = async () => {
   showToast("Encrypted CA report downloaded.", "success");
 };
 
+const renderCaReportSummary = (report) => {
+  if (!caReportSummaryEl) return;
+  const portfolioTx = report?.portfolio?.transactions?.length || 0;
+  const fyCount = report?.portfolio?.fySummary?.length || 0;
+  const withdrawals = report?.withdrawals?.length || 0;
+  const staking = report?.stakingIncome?.length || 0;
+  const generatedAt = report?.generatedAt || "";
+  caReportSummaryEl.textContent = `Report loaded. Generated: ${generatedAt || "unknown"}. Transactions: ${portfolioTx}. FY rows: ${fyCount}. Withdrawals: ${withdrawals}. Income records: ${staking}.`;
+};
+
 const parseCsvLine = (line) => {
   const result = [];
   let current = "";
@@ -1293,22 +1635,120 @@ const parseCsvLine = (line) => {
   return result.map((s) => s.trim());
 };
 
-const importCsvTransactions = (text) => {
+const CSV_FORMATS = {
+  generic: {
+    date: ["date", "time", "created_at"],
+    type: ["type", "side", "trade_type"],
+    asset: ["asset", "symbol", "coin", "market"],
+    units: ["units", "qty", "quantity", "amount"],
+    price: ["price_inr", "price", "rate", "price_per_unit"],
+    feePercent: ["fee_percent", "fee"],
+    gstOnFee: ["gst_on_fee"],
+    notes: ["notes"]
+  },
+  wazirx: {
+    date: ["time", "created_at", "date"],
+    type: ["type", "side"],
+    asset: ["market", "symbol"],
+    units: ["quantity", "qty", "amount"],
+    price: ["price", "rate"],
+    feePercent: ["fee_percent", "fee"],
+    notes: ["notes"]
+  },
+  coindcx: {
+    date: ["timestamp", "time", "created_at", "date"],
+    type: ["side", "type"],
+    asset: ["market", "symbol"],
+    units: ["quantity", "qty", "amount"],
+    price: ["price", "rate"],
+    feePercent: ["fee_percent", "fee"],
+    notes: ["notes"]
+  },
+  binance: {
+    date: ["time", "timestamp", "date"],
+    type: ["side", "type"],
+    asset: ["symbol", "market"],
+    units: ["qty", "quantity", "amount"],
+    price: ["price"],
+    feePercent: ["fee_percent", "commission"],
+    notes: ["notes"]
+  }
+};
+
+const detectCsvFormat = (headers) => {
+  const headerSet = new Set(headers);
+  if (headerSet.has("market") && headerSet.has("side") && headerSet.has("price") && headerSet.has("quantity")) return "wazirx";
+  if (headerSet.has("market") && headerSet.has("side") && headerSet.has("price") && headerSet.has("timestamp")) return "coindcx";
+  if (headerSet.has("symbol") && headerSet.has("price") && headerSet.has("qty")) return "binance";
+  return "generic";
+};
+
+const resolveHeader = (headers, candidates) => candidates.find((c) => headers.includes(c)) || null;
+
+const getUsdInrRate = () => {
+  const direct = parseFloat(usdInrRateInput?.value || "");
+  if (Number.isFinite(direct) && direct > 0) return direct;
+  return fxUsdToInr > 0 ? fxUsdToInr : 0;
+};
+
+const parseMarketAsset = (rawMarket) => {
+  const raw = (rawMarket || "").toString().toUpperCase().trim();
+  if (!raw) return { asset: "", quote: "" };
+  if (raw.includes("/")) {
+    const [base, quote] = raw.split("/");
+    return { asset: base, quote };
+  }
+  if (raw.includes("-")) {
+    const [base, quote] = raw.split("-");
+    return { asset: base, quote };
+  }
+  const quotes = ["INR", "USDT", "USD", "BUSD"];
+  const hit = quotes.find((q) => raw.endsWith(q));
+  if (hit) return { asset: raw.slice(0, raw.length - hit.length), quote: hit };
+  return { asset: raw, quote: "" };
+};
+
+const toInrPrice = (price, quote) => {
+  if (!Number.isFinite(price)) return 0;
+  if (!quote || quote === "INR") return price;
+  if (["USDT", "USD", "BUSD"].includes(quote)) {
+    const rate = getUsdInrRate();
+    return rate > 0 ? price * rate : price;
+  }
+  return price;
+};
+
+const normalizeCsvDate = (raw) => {
+  const value = (raw || "").toString().trim();
+  if (!value) return "";
+  if (/^\d{10,13}$/.test(value)) {
+    const num = parseInt(value, 10);
+    const ms = value.length === 10 ? num * 1000 : num;
+    const d = new Date(ms);
+    if (Number.isFinite(d.getTime())) return d.toISOString().slice(0, 10);
+  }
+  const d = new Date(value);
+  if (Number.isFinite(d.getTime())) return d.toISOString().slice(0, 10);
+  return value;
+};
+
+const importCsvTransactions = (text, format = "auto") => {
   const lines = text.split(/\r?\n/).filter((l) => l.trim().length);
   if (!lines.length) return { error: "CSV is empty." };
 
   const headers = parseCsvLine(lines[0]).map((h) => h.toLowerCase());
-  const idx = (name) => headers.indexOf(name);
+  const selected = format === "auto" ? detectCsvFormat(headers) : format;
+  const formatMap = CSV_FORMATS[selected] || CSV_FORMATS.generic;
 
   const map = {
-    date: idx("date") >= 0 ? "date" : idx("time") >= 0 ? "time" : idx("created_at") >= 0 ? "created_at" : null,
-    type: idx("type") >= 0 ? "type" : idx("side") >= 0 ? "side" : idx("trade_type") >= 0 ? "trade_type" : null,
-    asset: idx("asset") >= 0 ? "asset" : idx("symbol") >= 0 ? "symbol" : idx("coin") >= 0 ? "coin" : idx("market") >= 0 ? "market" : null,
-    units: idx("units") >= 0 ? "units" : idx("qty") >= 0 ? "qty" : idx("quantity") >= 0 ? "quantity" : idx("amount") >= 0 ? "amount" : null,
-    price: idx("price_inr") >= 0 ? "price_inr" : idx("price") >= 0 ? "price" : idx("rate") >= 0 ? "rate" : idx("price_per_unit") >= 0 ? "price_per_unit" : null,
-    feePercent: idx("fee_percent") >= 0 ? "fee_percent" : null,
-    gstOnFee: idx("gst_on_fee") >= 0 ? "gst_on_fee" : null,
-    notes: idx("notes") >= 0 ? "notes" : null
+    date: resolveHeader(headers, formatMap.date),
+    type: resolveHeader(headers, formatMap.type),
+    asset: resolveHeader(headers, formatMap.asset),
+    units: resolveHeader(headers, formatMap.units),
+    price: resolveHeader(headers, formatMap.price),
+    feePercent: resolveHeader(headers, formatMap.feePercent),
+    gstOnFee: resolveHeader(headers, formatMap.gstOnFee),
+    notes: resolveHeader(headers, formatMap.notes)
   };
 
   if (!map.date || !map.type || !map.asset || !map.units || !map.price) {
@@ -1316,25 +1756,31 @@ const importCsvTransactions = (text) => {
   }
 
   const get = (row, key) => {
-    const i = headers.indexOf(map[key]);
+    const i = map[key] ? headers.indexOf(map[key]) : -1;
     return i >= 0 ? row[i] : "";
   };
 
   const txs = [];
   for (let i = 1; i < lines.length; i += 1) {
     const row = parseCsvLine(lines[i]);
-    const rawType = get(row, "type").toLowerCase();
+    const rawType = (get(row, "type") || "").toString().toLowerCase();
     const type = rawType.includes("sell") ? "sell" : "buy";
-    const assetRaw = get(row, "asset");
-    const asset = assetRaw.includes("/") ? assetRaw.split("/")[0] : assetRaw.includes("-") ? assetRaw.split("-")[0] : assetRaw;
+    const marketRaw = get(row, "asset");
+    const { asset, quote } = parseMarketAsset(marketRaw);
+    const units = parseFloat(get(row, "units")) || 0;
+    const rawPrice = parseFloat(get(row, "price")) || 0;
+    const price = toInrPrice(rawPrice, quote);
+    const feePercent = parseFloat(get(row, "feePercent")) || 0;
+    const gstEnabled = String(get(row, "gstOnFee")).toLowerCase() === "yes";
+
     txs.push({
-      date: get(row, "date"),
+      date: normalizeCsvDate(get(row, "date")),
       type,
       asset: normalizeAsset(asset),
-      units: parseFloat(get(row, "units")) || 0,
-      price: parseFloat(get(row, "price")) || 0,
-      feePercent: parseFloat(get(row, "feePercent")) || 0,
-      gstEnabled: String(get(row, "gstOnFee")).toLowerCase() === "yes",
+      units,
+      price,
+      feePercent,
+      gstEnabled,
       notes: get(row, "notes") || ""
     });
   }
@@ -1452,6 +1898,14 @@ const hmacSha256 = async (secret, message) => {
   return toHex(sig);
 };
 
+const dateToMsRange = (startDate, endDate) => {
+  const startMs = startDate ? new Date(startDate).getTime() : 0;
+  const endMs = endDate ? new Date(endDate).getTime() : 0;
+  const start = Number.isFinite(startMs) ? startMs : 0;
+  const end = Number.isFinite(endMs) ? endMs + 24 * 60 * 60 * 1000 - 1 : 0;
+  return { start, end };
+};
+
 const importWazirxTrades = async (apiKey, apiSecret) => {
   const recvWindow = 60000;
   const timestamp = Date.now();
@@ -1464,6 +1918,30 @@ const importWazirxTrades = async (apiKey, apiSecret) => {
       "X-API-KEY": apiKey
     }
   });
+  if (!res.ok) throw new Error(`API error: ${res.status}`);
+  return res.json();
+};
+
+const importCoinDcxTrades = async (apiKey, apiSecret, { start, end } = {}) => {
+  const body = {
+    limit: 2000,
+    sort: "desc"
+  };
+  if (start > 0) body.startTime = start;
+  if (end > 0) body.endTime = end;
+  const payload = JSON.stringify(body);
+  const signature = await hmacSha256(apiSecret, payload);
+
+  const res = await fetch("https://api.coindcx.com/exchange/v1/orders/trade_history", {
+    method: "POST",
+    headers: {
+      "X-AUTH-APIKEY": apiKey,
+      "X-AUTH-SIGNATURE": signature,
+      "Content-Type": "application/json"
+    },
+    body: payload
+  });
+
   if (!res.ok) throw new Error(`API error: ${res.status}`);
   return res.json();
 };
@@ -1786,6 +2264,33 @@ const fetchLivePrice = async (coinId, { allowCache = true } = {}) => {
       setLastUpdated(0);
     }
   }
+};
+
+const fetchHistoricalPrice = async (coinId, dateStr) => {
+  if (!coinId || !dateStr) throw new Error("Coin ID and date are required.");
+  const d = new Date(dateStr);
+  if (!Number.isFinite(d.getTime())) throw new Error("Invalid date.");
+  const day = String(d.getDate()).padStart(2, "0");
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const year = d.getFullYear();
+  const formatted = `${day}-${month}-${year}`;
+  const url = `https://api.coingecko.com/api/v3/coins/${encodeURIComponent(coinId)}/history?date=${formatted}`;
+  const res = await fetch(url, { headers: { accept: "application/json" } });
+  if (!res.ok) throw new Error("Historical price fetch failed.");
+  const data = await res.json();
+  const price = data?.market_data?.current_price?.inr;
+  if (!Number.isFinite(price) || price <= 0) throw new Error("Historical INR price unavailable.");
+  return price;
+};
+
+const applyHistoricalPrice = (target, price) => {
+  const value = price.toFixed(2);
+  if (target === "buyPrice" && buyPricePerUnitInput) buyPricePerUnitInput.value = value;
+  if (target === "sellPrice" && sellPricePerUnitInput) sellPricePerUnitInput.value = value;
+  if (target === "txPrice" && txPriceInput) txPriceInput.value = value;
+  if (target === "swapFrom" && swapFromPriceInput) swapFromPriceInput.value = value;
+  if (target === "swapTo" && swapToPriceInput) swapToPriceInput.value = value;
+  if (target === "manualLive" && manualPriceInrInput) manualPriceInrInput.value = value;
 };
 
 const updateDisplayedPrice = (baseInrPrice) => {
@@ -2281,6 +2786,33 @@ coinSearchInput.addEventListener("keydown", (event) => {
   }
 });
 
+historyUseCurrentBtn?.addEventListener("click", () => {
+  if (!historyCoinIdInput) return;
+  historyCoinIdInput.value = buyCoinSelect?.value || "";
+});
+
+historyFetchBtn?.addEventListener("click", async () => {
+  const coinId = historyCoinIdInput?.value?.trim();
+  const dateStr = historyDateInput?.value;
+  const target = historyTargetSelect?.value || "buyPrice";
+  if (!coinId || !dateStr) {
+    setMessage(historyMessageEl, "Enter coin ID and date.");
+    showToast("Enter coin ID and date.", "error");
+    return;
+  }
+  setMessage(historyMessageEl, "Fetching historical price...");
+  try {
+    const price = await fetchHistoricalPrice(coinId, dateStr);
+    applyHistoricalPrice(target, price);
+    setMessage(historyMessageEl, `Price applied: ${formatINR(price)}.`);
+    showToast("Historical price applied.", "success");
+  } catch (err) {
+    const msg = err?.message || "Historical price fetch failed.";
+    setMessage(historyMessageEl, msg);
+    showToast(msg, "error");
+  }
+});
+
 p2pToggle.addEventListener("change", () => {
   usdtRateField.hidden = !p2pToggle.checked;
   savePrefs({ p2pEnabled: p2pToggle.checked });
@@ -2526,6 +3058,21 @@ themeToggleBtn.addEventListener("click", () => {
   showToast(`Theme: ${next}`, "success");
 });
 
+profileSelect?.addEventListener("change", () => {
+  const id = profileSelect.value;
+  setActiveProfileId(id);
+  renderPortfolio();
+  renderWithdrawals();
+  renderStaking();
+  syncPortfolioMethodInput();
+  setProfileMessage("Active profile updated.");
+  showToast("Profile switched.", "success");
+});
+
+addProfileBtn?.addEventListener("click", createProfile);
+renameProfileBtn?.addEventListener("click", renameProfile);
+deleteProfileBtn?.addEventListener("click", deleteProfile);
+
 portfolioMethodSelect?.addEventListener("change", () => {
   const p = loadPortfolio();
   p.method = portfolioMethodSelect.value === "avg" ? "avg" : "fifo";
@@ -2554,6 +3101,20 @@ exportCaReportEncryptedBtn?.addEventListener("click", () => {
   });
 });
 
+caReportFileInput?.addEventListener("change", async () => {
+  const file = caReportFileInput?.files?.[0];
+  if (!file) return;
+  try {
+    const text = await file.text();
+    const report = JSON.parse(text);
+    renderCaReportSummary(report);
+    showToast("CA report loaded.", "success");
+  } catch {
+    if (caReportSummaryEl) caReportSummaryEl.textContent = "Invalid CA report file.";
+    showToast("Invalid CA report file.", "error");
+  }
+});
+
 addSwapBtn?.addEventListener("click", addSwapTransaction);
 addStakingIncomeBtn?.addEventListener("click", addStakingIncome);
 clearStakingIncomeBtn?.addEventListener("click", () => {
@@ -2571,7 +3132,8 @@ importCsvBtn?.addEventListener("click", async () => {
     return;
   }
   const text = await file.text();
-  const result = importCsvTransactions(text);
+  const format = importCsvFormatSelect?.value || "auto";
+  const result = importCsvTransactions(text, format);
   if (result.error) {
     setMessage(importCsvMessageEl, result.error);
     showToast(result.error, "error");
@@ -2592,6 +3154,7 @@ apiImportBtn?.addEventListener("click", async () => {
   const exchange = apiExchangeSelect?.value || "wazirx";
   const apiKey = apiKeyInput?.value?.trim();
   const apiSecret = apiSecretInput?.value?.trim();
+  const { start, end } = dateToMsRange(apiStartDateInput?.value, apiEndDateInput?.value);
   if (!apiKey || !apiSecret) {
     setMessage(apiImportMessageEl, "API key and secret are required.");
     showToast("Enter API key and secret.", "error");
@@ -2599,21 +3162,31 @@ apiImportBtn?.addEventListener("click", async () => {
   }
   setMessage(apiImportMessageEl, "Fetching trades... (may be blocked by CORS)");
   try {
-    if (exchange !== "wazirx") {
-      throw new Error("Only WazirX API import is available in this build.");
+    let trades = [];
+    if (exchange === "wazirx") {
+      trades = await importWazirxTrades(apiKey, apiSecret);
+    } else if (exchange === "coindcx") {
+      trades = await importCoinDcxTrades(apiKey, apiSecret, { start, end });
+    } else {
+      throw new Error("Binance API import is not available in this build.");
     }
-    const trades = await importWazirxTrades(apiKey, apiSecret);
+
     const txs = Array.isArray(trades)
-      ? trades.map((t) => ({
-        date: new Date(t.time || t.created_at || Date.now()).toISOString().slice(0, 10),
-        type: t.type === "sell" ? "sell" : "buy",
-        asset: normalizeAsset((t.market || t.symbol || "").split(/[/-]/)[0] || ""),
-        units: parseFloat(t.quantity || t.qty || 0),
-        price: parseFloat(t.price || t.rate || 0),
-        feePercent: 0,
-        gstEnabled: false,
-        notes: `API import (${exchange})`
-      }))
+      ? trades.map((t) => {
+        const marketRaw = t.market || t.symbol || t.pair || "";
+        const { asset, quote } = parseMarketAsset(marketRaw);
+        const price = toInrPrice(parseFloat(t.price || t.rate || 0), quote);
+        return {
+          date: new Date(t.time || t.created_at || t.timestamp || Date.now()).toISOString().slice(0, 10),
+          type: t.type === "sell" || t.side === "sell" ? "sell" : "buy",
+          asset: normalizeAsset(asset),
+          units: parseFloat(t.quantity || t.qty || t.amount || 0),
+          price,
+          feePercent: 0,
+          gstEnabled: false,
+          notes: `API import (${exchange})`
+        };
+      })
       : [];
 
     if (!txs.length) throw new Error("No trades returned from API.");
@@ -2686,10 +3259,11 @@ if ("serviceWorker" in navigator) {
 
 setupTabs();
 applyPreferences();
+renderProfileSelect();
 
 // Portfolio
 const portfolio = loadPortfolio();
-if (portfolioMethodSelect) portfolioMethodSelect.value = portfolio.method;
+syncPortfolioMethodInput();
 if (txFeePercentInput) {
   const val = parseFloat(feePercentInput.value);
   if (Number.isFinite(val) && val >= 0) txFeePercentInput.value = String(val);
@@ -2710,6 +3284,18 @@ if (swapDateInput) {
 if (stakingDateInput) {
   const today = new Date();
   stakingDateInput.value = today.toISOString().slice(0, 10);
+}
+if (apiStartDateInput) {
+  const today = new Date();
+  apiStartDateInput.value = today.toISOString().slice(0, 10);
+}
+if (apiEndDateInput) {
+  const today = new Date();
+  apiEndDateInput.value = today.toISOString().slice(0, 10);
+}
+if (historyDateInput) {
+  const today = new Date();
+  historyDateInput.value = today.toISOString().slice(0, 10);
 }
 renderPortfolio();
 renderWithdrawals();

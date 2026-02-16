@@ -345,6 +345,30 @@
           <h2>Portfolio Ledger</h2>
           <p class="subtitle">Track multiple buys/sells with FIFO or Average Cost. Uses your current Sell Mode settings for surcharge and TDS.</p>
 
+          <div class="result-card">
+            <h3>Multi-User Profiles</h3>
+            <p class="subtitle">Create separate profiles for family members or portfolios (stored locally).</p>
+            <div class="form-grid">
+              <div class="field">
+                <label for="profileSelect">Active Profile</label>
+                <select id="profileSelect"></select>
+              </div>
+              <div class="field">
+                <label for="profileName">Profile Name</label>
+                <input type="text" id="profileName" placeholder="e.g. Family, Long Term" />
+              </div>
+              <div class="field">
+                <label>Actions</label>
+                <div class="action-row profile-actions">
+                  <button id="addProfile" class="secondary-btn" type="button">Create</button>
+                  <button id="renameProfile" class="secondary-btn" type="button">Rename</button>
+                  <button id="deleteProfile" class="secondary-btn" type="button">Delete</button>
+                </div>
+              </div>
+            </div>
+            <div id="profileMessage" class="form-message" role="status" aria-live="polite"></div>
+          </div>
+
           <div class="form-grid">
             <div class="field">
               <label for="portfolioMethod">Costing Method</label>
@@ -452,7 +476,7 @@
 
           <div class="result-card">
             <h3>Bulk Import (CSV)</h3>
-            <p class="subtitle">Import CSV with columns: date, type, asset, units, price_inr, fee_percent, gst_on_fee, notes.</p>
+            <p class="subtitle">Import CSV with auto-mapping for popular exchanges or generic columns.</p>
             <div class="form-grid">
               <div class="field">
                 <label for="importCsv">Upload CSV</label>
@@ -463,6 +487,16 @@
                 <select id="importCsvMode">
                   <option value="append">Append to existing</option>
                   <option value="replace">Replace all transactions</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="importCsvFormat">CSV Format</label>
+                <select id="importCsvFormat">
+                  <option value="auto">Auto Detect</option>
+                  <option value="wazirx">WazirX</option>
+                  <option value="coindcx">CoinDCX</option>
+                  <option value="binance">Binance</option>
+                  <option value="generic">Generic</option>
                 </select>
               </div>
             </div>
@@ -483,6 +517,14 @@
                   <option value="coindcx">CoinDCX</option>
                   <option value="binance">Binance</option>
                 </select>
+              </div>
+              <div class="field">
+                <label for="apiStartDate">Start Date</label>
+                <input type="date" id="apiStartDate" />
+              </div>
+              <div class="field">
+                <label for="apiEndDate">End Date</label>
+                <input type="date" id="apiEndDate" />
               </div>
               <div class="field">
                 <label for="apiKey">API Key</label>
@@ -555,6 +597,93 @@
               <tbody id="fyTbody"></tbody>
             </table>
           </div>
+        </div>
+
+        <div class="result-card">
+          <h3>Tax Loss Harvesting (Plan)</h3>
+          <p class="subtitle">Estimate unrealized losses using current prices. Losses cannot be offset in India, but this helps plan exits.</p>
+          <div class="table-wrap">
+            <table class="data-table" id="harvestTable">
+              <thead>
+                <tr>
+                  <th>Asset</th>
+                  <th>Units</th>
+                  <th>Avg Cost (₹)</th>
+                  <th>Current Price (₹)</th>
+                  <th>Unrealized P/L (₹)</th>
+                  <th>Signal</th>
+                </tr>
+              </thead>
+              <tbody id="harvestTbody"></tbody>
+              <tfoot>
+                <tr>
+                  <td colspan="4" style="text-align: right; font-weight: 600;">Total Unrealized:</td>
+                  <td id="harvestTotal" style="font-weight: 600;">₹0</td>
+                  <td></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+          <div id="harvestSummary" class="info-message" role="status" aria-live="polite"></div>
+        </div>
+
+        <div class="result-card">
+          <h3>Advanced Analytics</h3>
+          <div class="chart-grid">
+            <div class="chart-card">
+              <h4>FY Net P/L Comparison</h4>
+              <div id="fyChart" class="bar-chart"></div>
+              <div id="fyChartLegend" class="chart-legend"></div>
+            </div>
+            <div class="chart-card">
+              <h4>Monthly Capital Gains (Gross)</h4>
+              <div id="monthlyChart" class="bar-chart"></div>
+              <div id="monthlyChartLegend" class="chart-legend"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="result-card">
+          <h3>Historical Price Lookup</h3>
+          <p class="subtitle">Fetch historical INR prices via CoinGecko to backfill entries.</p>
+          <div class="form-grid">
+            <div class="field">
+              <label for="historyCoinId">CoinGecko Coin ID</label>
+              <input type="text" id="historyCoinId" placeholder="e.g. bitcoin" />
+            </div>
+            <div class="field">
+              <label for="historyDate">Date</label>
+              <input type="date" id="historyDate" />
+            </div>
+            <div class="field">
+              <label for="historyTarget">Apply To</label>
+              <select id="historyTarget">
+                <option value="buyPrice">Buy Price/Unit</option>
+                <option value="sellPrice">Sell Price/Unit</option>
+                <option value="txPrice">Portfolio Tx Price</option>
+                <option value="swapFrom">Swap From Price</option>
+                <option value="swapTo">Swap To Price</option>
+                <option value="manualLive">Manual Live Price</option>
+              </select>
+            </div>
+          </div>
+          <div class="action-row">
+            <button id="historyUseCurrent" class="secondary-btn" type="button">Use Selected Coin</button>
+            <button id="historyFetchBtn" class="secondary-btn" type="button">Fetch Price</button>
+          </div>
+          <div id="historyMessage" class="form-message" role="status" aria-live="polite"></div>
+        </div>
+
+        <div class="result-card">
+          <h3>CA Collaboration</h3>
+          <p class="subtitle">Open a CA report JSON to review locally (no upload to servers).</p>
+          <div class="form-grid">
+            <div class="field">
+              <label for="caReportFile">Upload CA Report</label>
+              <input type="file" id="caReportFile" accept=".json" />
+            </div>
+          </div>
+          <div id="caReportSummary" class="info-message" role="status" aria-live="polite"></div>
         </div>
 
         <div class="result-card">
@@ -643,6 +772,9 @@
               <label for="stakingType">Type</label>
               <select id="stakingType">
                 <option value="staking">Staking</option>
+                <option value="yield_farming">Yield Farming</option>
+                <option value="liquidity">Liquidity Pool</option>
+                <option value="lending">Lending</option>
                 <option value="airdrop">Airdrop</option>
                 <option value="mining">Mining</option>
                 <option value="interest">Interest</option>
