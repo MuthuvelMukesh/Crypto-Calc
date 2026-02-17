@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Calculate cryptocurrency investments and taxes for India with live prices. Plan your crypto investments with fee breakdown and tax calculations." />
+  <meta name="theme-color" content="#1e63ff" />
   <title>Indian Crypto Tax & Investment Planner</title>
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -13,97 +15,134 @@
         <h1>Indian Crypto Tax & Investment Planner</h1>
         <p class="subtitle">Live pricing + buy/sell calculators tailored for India</p>
       </div>
-      <div class="live-price-card">
+      <div class="live-price-card" role="region" aria-label="Live cryptocurrency price">
         <div class="live-label">Live Price</div>
-        <div id="livePrice" class="live-price">Loading...</div>
-        <div id="liveSymbol" class="live-symbol">—</div>
+        <div id="livePrice" class="live-price" aria-live="polite">Loading...</div>
+        <div id="liveSymbol" class="live-symbol" aria-live="polite">—</div>
       </div>
     </header>
 
-    <section class="tabs">
-      <button class="tab-btn active" data-tab="buy">Buy Mode</button>
-      <button class="tab-btn" data-tab="sell">Sell Mode</button>
-    </section>
+    <nav class="tabs" role="tablist" aria-label="Calculator modes">
+      <button class="tab-btn active" data-tab="buy" role="tab" aria-selected="true" aria-controls="buy">
+        <span aria-hidden="true">💰</span> Buy Mode
+      </button>
+      <button class="tab-btn" data-tab="sell" role="tab" aria-selected="false" aria-controls="sell">
+        <span aria-hidden="true">💸</span> Sell Mode
+      </button>
+    </nav>
 
     <main>
-      <section id="buy" class="tab-panel active">
+      <section id="buy" class="tab-panel active" role="tabpanel" aria-labelledby="buy-tab">
         <div class="card">
           <h2>Investment Planner</h2>
-          <div class="form-grid">
+          <div id="buyError" class="error-message" style="display: none;" role="alert"></div>
+          <form id="buyForm" class="form-grid" onsubmit="return false;">
             <div class="field">
               <label for="investAmount">Amount to Invest (INR)</label>
-              <input type="number" id="investAmount" placeholder="e.g. 25000" min="0" step="0.01" />
+              <input 
+                type="number" 
+                id="investAmount" 
+                placeholder="e.g. 25000" 
+                min="0" 
+                step="0.01"
+                aria-required="true"
+                aria-describedby="investAmount-help"
+              />
+              <span id="investAmount-help" class="sr-only">Enter the amount in Indian Rupees you want to invest</span>
             </div>
             <div class="field">
               <label for="buyCoin">Select Coin</label>
-              <select id="buyCoin">
+              <select id="buyCoin" aria-label="Select cryptocurrency">
                 <option value="bitcoin" data-symbol="BTC">BTC (Bitcoin)</option>
                 <option value="ethereum" data-symbol="ETH">ETH (Ethereum)</option>
                 <option value="solana" data-symbol="SOL">SOL (Solana)</option>
                 <option value="matic-network" data-symbol="MATIC">MATIC (Polygon)</option>
               </select>
             </div>
-          </div>
-          <button id="calculateBuy" class="primary-btn">Calculate Units</button>
+          </form>
+          <button id="calculateBuy" class="primary-btn" aria-label="Calculate investment units">
+            Calculate Units
+          </button>
         </div>
 
-        <div class="result-card" id="buyResult">
+        <div class="result-card" id="buyResult" role="region" aria-label="Investment breakdown results">
           <h3>Investment Breakdown</h3>
           <div class="result-grid">
             <div class="result-item">
               <span>Exchange Fee (0.2%)</span>
-              <strong id="buyFee">—</strong>
+              <strong id="buyFee" aria-label="Exchange fee amount">—</strong>
             </div>
             <div class="result-item">
               <span>GST (18% on Fee)</span>
-              <strong id="buyGst">—</strong>
+              <strong id="buyGst" aria-label="GST amount">—</strong>
             </div>
             <div class="result-item">
               <span>Net Invested</span>
-              <strong id="buyNet">—</strong>
+              <strong id="buyNet" aria-label="Net invested amount">—</strong>
             </div>
             <div class="result-item highlight">
               <span>Units Received</span>
-              <strong id="buyUnits">—</strong>
+              <strong id="buyUnits" aria-label="Cryptocurrency units received">—</strong>
             </div>
           </div>
         </div>
       </section>
 
-      <section id="sell" class="tab-panel">
+      <section id="sell" class="tab-panel" role="tabpanel" aria-labelledby="sell-tab">
         <div class="card">
           <h2>Tax Calculator</h2>
-          <div class="form-grid">
+          <div id="sellError" class="error-message" style="display: none;" role="alert"></div>
+          <form id="sellForm" class="form-grid" onsubmit="return false;">
             <div class="field">
               <label for="buyingPrice">Buying Price (Total INR)</label>
-              <input type="number" id="buyingPrice" placeholder="e.g. 40000" min="0" step="0.01" />
+              <input 
+                type="number" 
+                id="buyingPrice" 
+                placeholder="e.g. 40000" 
+                min="0" 
+                step="0.01"
+                aria-required="true"
+                aria-describedby="buyingPrice-help"
+              />
+              <span id="buyingPrice-help" class="sr-only">Enter the total amount you paid in Indian Rupees</span>
             </div>
             <div class="field">
               <label for="sellingPrice">Selling Price (Total INR)</label>
-              <input type="number" id="sellingPrice" placeholder="e.g. 52000" min="0" step="0.01" />
+              <input 
+                type="number" 
+                id="sellingPrice" 
+                placeholder="e.g. 52000" 
+                min="0" 
+                step="0.01"
+                aria-required="true"
+                aria-describedby="sellingPrice-help"
+              />
+              <span id="sellingPrice-help" class="sr-only">Enter the total selling price in Indian Rupees</span>
             </div>
-          </div>
-          <button id="calculateSell" class="primary-btn">Calculate Profit</button>
+          </form>
+          <button id="calculateSell" class="primary-btn" aria-label="Calculate profit and taxes">
+            Calculate Profit
+          </button>
         </div>
 
-        <div class="result-card" id="sellResult">
+        <div class="result-card" id="sellResult" role="region" aria-label="Tax breakdown results">
           <h3>Tax Breakdown</h3>
           <div class="result-grid">
             <div class="result-item">
               <span>Gross Profit</span>
-              <strong id="grossProfit">—</strong>
+              <strong id="grossProfit" aria-label="Gross profit amount">—</strong>
             </div>
             <div class="result-item">
               <span>Tax (30% on Profit)</span>
-              <strong id="taxDeducted">—</strong>
+              <strong id="taxDeducted" aria-label="Tax deducted amount">—</strong>
             </div>
             <div class="result-item">
               <span>TDS (1% on Selling)</span>
-              <strong id="tdsDeducted">—</strong>
+              <strong id="tdsDeducted" aria-label="TDS deducted amount">—</strong>
             </div>
             <div class="result-item highlight">
               <span>Net Profit</span>
-              <strong id="netProfit">—</strong>
+              <strong id="netProfit" aria-label="Net profit amount">—</strong>
             </div>
           </div>
         </div>
