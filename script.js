@@ -201,7 +201,24 @@ const calculateSell = () => {
   
   // Show loss warning if applicable
   if (grossProfit < 0) {
-    showError(sellErrorEl, '⚠️ Note: Crypto losses cannot be offset in India under VDA rules.');
+    const warningMsg = document.createElement('div');
+    warningMsg.className = 'error-message';
+    warningMsg.style.cssText = 'background: #fff3cd; color: #856404; border-left-color: #ffc107; margin-top: 16px;';
+    warningMsg.textContent = '⚠️ Note: Crypto losses cannot be offset in India under VDA rules.';
+    warningMsg.setAttribute('role', 'status');
+    
+    const existingWarning = document.querySelector('.loss-warning');
+    if (existingWarning) {
+      existingWarning.remove();
+    }
+    
+    warningMsg.classList.add('loss-warning');
+    document.getElementById('sellResult').appendChild(warningMsg);
+  } else {
+    const existingWarning = document.querySelector('.loss-warning');
+    if (existingWarning) {
+      existingWarning.remove();
+    }
   }
   
   // Add success animation
