@@ -1,249 +1,319 @@
 # Indian Crypto Tax & Investment Planner
 
-A lightweight single-page web app for planning crypto investments and calculating taxes under Indian rules. Built with vanilla HTML, CSS, and JavaScript, and powered by live prices from CoinGecko.
+A feature-rich, privacy-first single-page web app for planning crypto investments and calculating taxes under Indian tax rules. Built with **vanilla HTML, CSS, and JavaScript** — no frameworks, no tracking, no server. Powered by live prices from CoinGecko and Binance.
 
-**🚀 [View Deployment & Monetization Guide](DEPLOYMENT.md)**
+> ⚠️ **Educational purpose only — not financial or tax advice.** Always consult a qualified Chartered Accountant before filing.
+
+---
 
 ## Features
-- Live pricing (CoinGecko/Binance) with clear API error messages + retry
-- Buy Mode: investment planner with exchange fee + optional GST, net invested, and units received
-- Sell Mode: unit-based tax calculator (sell a partial quantity) with full breakdown
-- Portfolio Tracker: Multi-transaction support with FIFO/Average cost basis methods
-- Exchange selector with per-exchange fee presets (save/load) + editable fee %
-- GST toggle (on/off) applied to fees
-- P2P / USDT premium mode: optional manual USDT rate override for more realistic India pricing
-- Add any coin: search CoinGecko and add the coin to the selector
-- Tax logic: 30% VDA tax on profit + 4% Health & Education Cess + Surcharge + 1% TDS on sale value
-- ROI (%) display with visual breakdown charts
-- Sale value breakdown visualization (stacked bar + legend)
-- Loss explanation + note: "Crypto losses cannot be set off in India (VDA rule)"
-- Disclaimer: "Educational purpose only – not financial advice"
-- Remembers preferences: last tab, coin, toggles, USDT rate, exchange + fee, and theme
-- Reset buttons per mode + Copy Results buttons
-- Keyboard-friendly tabs + visible focus states
-- Dark mode toggle
-- PWA-ready (manifest + service worker for basic offline support)
-- Auto-refreshes live price (every ~60s) and shows last updated time
-- Separate USD/INR rate (manual input or fetch) to make P2P/USDT pricing more realistic
-- Caches recent CoinGecko results and shows a friendly message when rate-limited
-- Sell Mode helpers: "Use Live" price buttons to auto-fill buy/sell prices from the live ticker
-- Break-even: calculate the sell price needed to hit a target net profit after tax + fees + TDS
-- Target planners: "I want X units → fill required INR to invest" and "I want ₹X net after tax → calculate units to sell"
-- CSV export for portfolio transactions and FY summary
+
+### 📊 Buy Mode — Investment Planner
+- Live INR price (CoinGecko / Binance / Manual)
+- Exchange fee + optional 18% GST on fee
+- P2P / USDT premium mode (manual USDT rate override)
+- Units received, net invested, effective price per unit, fees per unit
+- **Fill Amount for Target Units** — enter how many units you want → get the INR to invest
+- Add any coin via CoinGecko search
+
+### 💸 Sell Mode — Tax Calculator
+- 30% VDA tax (Section 115BBH) on gross profit
+- Surcharge brackets: 0%, 10%, 15%, 25%, 37%
+- 4% Health & Education Cess on (tax + surcharge)
+- 1% TDS (Section 194S) — always or threshold-based (₹50k Individual/HUF, ₹10k others)
+- Exchange fee + GST on fee deducted from net
+- ROI (%) with sale-value breakdown bar chart
+- **Break-even price** — required sell price for a target net profit
+- **Units to Sell** — how many units to sell for a target net-after-tax amount
+- **Required Sell Price** — compute required sell price for target net proceeds
+- "Use Live" buttons to auto-fill buy/sell prices from live ticker
+- Loss message: "Crypto losses cannot be set off in India (VDA rule)"
+
+### 🗂️ Portfolio — Ledger & Analytics
+- **Multi-User Profiles** — separate local portfolios (family members, strategies)
+- FIFO or Average Cost basis costing methods
+- Add buy/sell transactions with date, asset, units, price, fee, GST, notes
+- **Crypto-to-Crypto Swap** — records as Sell + Buy with proper cost basis
+- **Bulk CSV Import** — auto-detect WazirX, CoinDCX, Binance, or generic format; append or replace mode
+- **Exchange API Import (Beta)** — fetch trades directly from WazirX / CoinDCX with API key/secret
+- FY-wise summary table: Sell Value, Cost Basis, Gross P/L, Tax, Surcharge, Cess, TDS, Fees+GST, Net P/L
+- Holdings & average cost per asset
+- **Tax Loss Harvesting Planner** — unrealized P/L with live price overlay per asset
+- **Advanced Analytics** — FY Net P/L bar chart, Monthly Capital Gains bar chart
+- **Historical Price Lookup** — fetch any coin's INR price on any past date via CoinGecko
+- **Export Transaction CSV** / **Export FY Summary CSV**
+- **Export Schedule VDA (ITR)** — capital gains in CA-ready CSV format
+- **Export CA Report** — full JSON + plain-text summary for your accountant
+- **Export CA Report (Encrypted)** — AES-256-GCM password-protected CA report
+- **CA Collaboration** — open CA JSON reports locally for review (no server upload)
+- **Bank Withdrawal Tracker** — log NEFT/RTGS/IMPS withdrawals with fees; CSV export
+
+### 🌾 Staking & Income
+- Track staking, yield farming, liquidity pool, lending, airdrop, mining, interest
+- FY-aggregated total (taxed as "Income from Other Sources")
+- CSV export
+
+### 📈 Derivatives
+- Futures & Options PnL calculator
+- Long / Short positions, leverage, contract size, funding fees
+- Gross PnL, Net PnL, ROI
+
+### 📋 Compliance & Info Guide
+- Form 26QE & Section 194S (effective July 1, 2022) explained
+- VDA Tax (Section 115BBH) — 30% flat, no deductions
+- Cost of Acquisition rules, FIFO vs Average, common pitfalls
+- 6-year record-keeping checklist
+- Links to official Income Tax India resources
+
+### ⚙️ General
+- Dark / Light theme with system preference detection
+- All preferences persisted in `localStorage` — last tab, coin, exchange, fee, toggles, theme
+- Per-exchange fee presets with save/load
+- Auto-refreshes live price every 60s (pauses when tab is hidden)
+- Price & FX caching with TTL to respect API rate limits
+- Graceful CoinGecko 429 rate-limit handling with cached fallback
+- Manual USD/INR or fetch from open.er-api.com
+- PWA installable (Service Worker + Web App Manifest)
+- Keyboard-accessible tabs (Arrow / Home / End)
+- ARIA labels and `role="status"` live regions throughout
+- Copy Results buttons (Buy / Sell modes)
+- Toast notification system
+
+---
 
 ## Tech Stack
-- **Build Tool:** Vite 5 (ultra-fast bundling)
-- **Language:** Vanilla JavaScript (ES6+)
-- **Markup:** HTML5
-- **Styling:** CSS3 with CSS Variables
-- **PWA:** Service Worker + Web App Manifest
-- **Dev Tools:** ESLint + Prettier
-- **Deployment:** Netlify, Vercel, Docker, GitHub Actions
 
-**[📖 Full Tech Stack Guide](TECH-STACK.md)**
+| Layer | Technology |
+|---|---|
+| Build | Vite 5 |
+| Language | Vanilla JavaScript (ES2021+) |
+| Markup | HTML5 |
+| Styling | CSS3 + CSS Custom Properties |
+| PWA | Service Worker + Web App Manifest |
+| Encryption | Web Crypto API (AES-256-GCM) |
+| Linting | ESLint (recommended ruleset) |
+| Formatting | Prettier |
+| Deployment | Netlify / Vercel / Docker |
 
-## 🚀 Deployment Options
+---
 
-### Quick Deploy (Free Hosting)
+## Quick Start
 
-**Option 1: Netlify (Recommended)**
+```bash
+# Install dependencies
+npm install
+
+# Start dev server (hot-reload)
+npm run dev
+# Opens at https://localhost:5173
+
+# Lint
+npm run lint
+
+# Production build
+npm run build
+
+# Preview production build locally
+npm run preview
+```
+
+---
+
+## Deployment
+
+### Netlify (Recommended — free tier)
 ```bash
 npm install -g netlify-cli
 npm run build
 netlify deploy --prod --dir=dist
 ```
+`netlify.toml` is already configured.
 
-**Option 2: Vercel**
+### Vercel
 ```bash
 npm install -g vercel
 vercel --prod
 ```
+`vercel.json` is already configured.
 
-**Option 3: GitHub Pages**
+### GitHub Pages
 ```bash
 git init && git add . && git commit -m "Initial"
 git remote add origin https://github.com/yourusername/crypto-calc.git
 git push -u origin main
-# Enable Pages in repo settings
+# Enable Pages → Branch: main → Folder: /dist
 ```
 
-**Option 4: Docker (VPS/Cloud)**
+### Docker
 ```bash
 docker build -t crypto-calc .
 docker run -p 5000:5000 crypto-calc
+
+# Or with Docker Compose
+docker-compose up
 ```
 
-See [DEPLOYMENT.md](DEPLOYMENT.md) & [TECH-STACK.md](TECH-STACK.md) for detailed instructions.
+---
 
-## 💰 Monetization
+## Monetization Setup
 
-This project includes built-in monetization features:
-- ✅ Google Analytics integration (track users)
-- ✅ Google AdSense placeholders (display ads)
-- ✅ Donation button (UPI/Crypto/PayPal support)
-- ✅ Affiliate-ready structure
-- ✅ Legal pages (Privacy Policy, Terms of Service)
+| Feature | Action Required |
+|---|---|
+| Google Analytics | Replace `GA_MEASUREMENT_ID` in `index.html` |
+| Google AdSense | Replace `ca-pub-XXXXXXXXXXXXXXXX` and `data-ad-slot` in `index.html` |
+| Donation button | Update UPI / wallet / Buy Me a Coffee URL in `src/script.js` (search `donateBtn`) |
+| Affiliate links | Add exchange referral links in the Compliance tab or footer |
 
-**Setup Instructions:**
-1. Replace `GA_MEASUREMENT_ID` in `index.html` with your Google Analytics ID
-2. Replace `ca-pub-XXXXXXXXXXXXXXXX` with your AdSense publisher ID
-3. Update donation information in `script.js` (search for "donateBtn")
-4. Add affiliate links for crypto exchanges
+---
 
-See [DEPLOYMENT.md](DEPLOYMENT.md) for complete monetization strategies and revenue projections.
+## Tax Rules Reference
 
-## ⚡ Quick Start (5 minutes)
+### VDA Tax (Section 115BBH)
+- **30% flat tax** on profit — no deductions allowed
+- **4% Cess** on (tax + surcharge)
+- **Surcharge** — 0% / 10% / 15% / 25% / 37% based on total income
+- **No loss set-off** — crypto losses cannot offset any other income or carry forward
+- Each transaction computed independently
 
-```bash
-# 1. Install dependencies
-npm install
+### TDS (Section 194S) — effective July 1, 2022
+- **1% TDS** on sale consideration
+- Filed via **Form 26QE** by exchanges; credits appear in **Form 26AS / AIS**
+- Threshold per FY: ₹50,000 (Individual/HUF) · ₹10,000 (Others)
 
-# 2. Start development server
-npm run dev
+### Costing Methods
+- **FIFO** — First-in, First-out (most commonly accepted)
+- **Average Cost** — Weighted average per unit
 
-# 3. Open https://localhost:5173
-# Your browser opens automatically!
+---
 
-# 4. Make changes and see them instantly (HMR)
+## Project Structure
 
-# 5. Build for production
-npm run build
-
-# 6. Preview production build
-npm run preview
+```
+Crypto-Calc/
+├── src/
+│   ├── script.js          # Main application (3,300+ lines — all features)
+│   ├── style.css          # Styling, themes, dark mode
+│   └── sw.js              # Service Worker source
+├── public/                # Static assets served as-is by Vite
+│   ├── manifest.json      # PWA manifest
+│   ├── sw.js              # Service Worker (served at root for correct scope)
+│   ├── icons/             # SVG app icons (192 x 512 x favicon)
+│   ├── privacy.html       # Privacy Policy
+│   ├── terms.html         # Terms of Service
+│   ├── netlify.toml       # Netlify headers / redirects
+│   └── vercel.json        # Vercel routing
+├── index.html             # App entry point
+├── privacy.html           # Privacy Policy (root copy for dev server)
+├── terms.html             # Terms of Service (root copy for dev server)
+├── vite.config.js         # Vite build config
+├── package.json           # Dependencies & npm scripts
+├── docker-compose.yml     # Docker Compose
+├── Dockerfile             # Docker container
+├── .eslintrc.json         # ESLint rules
+├── netlify.toml           # Netlify config
+├── vercel.json            # Vercel config
+└── README.md              # This file
 ```
 
-**[📚 Full Setup Guide](TECH-STACK.md)**
+---
 
-## How to Run Locally
+## Running Locally (Alternative Methods)
 
-### Option 1: VS Code Live Server
-1. Open folder in VS Code
-2. Install "Live Server" extension
-3. Right-click `index.html` → "Open with Live Server"
+### VS Code Live Server
+1. Install the **Live Server** extension
+2. Right-click `index.html` → **Open with Live Server**
 
-### Option 2: npm dev server (Recommended with Vite)
+### Python HTTP Server
 ```bash
-npm install
-npm run dev
-# Opens at https://localhost:5173
-```
-
-### Option 3: Python HTTP Server
-```bash
-cd Crypto-Calc
 python -m http.server 8000
 # Visit http://localhost:8000
 ```
+> Service worker requires HTTPS or `localhost`. Use `npm run dev` for full PWA support.
 
-### Option 4: Docker
-```bash
-docker-compose up
-# Opens at http://localhost:5000
-```
-
-## PWA Installation
-For "Install App" to appear, serve the folder over HTTP/HTTPS (service workers do not run on `file://`).
+---
 
 ## Usage Tips
-- **Exchange fee presets:** Pick an exchange, enter a fee %, click **Save**. Switching exchanges loads the saved fee.
-- **P2P / USDT premium:** Enable the toggle and enter your actual USDT rate (₹/USDT). Live price updates accordingly.
-- **Add any coin:** Search by name/symbol, then click **Add**.
-- **Portfolio tracking:** Add buy/sell transactions to track your portfolio with automatic FIFO/Average cost basis.
-- **Tax optimization:** Use surcharge settings for higher income brackets, TDS threshold mode for accurate calculations.
 
-## Tax Calculations
+- **Exchange fee:** Select exchange → enter fee % → **Save**. Switching exchanges auto-loads the saved fee.
+- **P2P mode:** Enable toggle → enter your actual ₹/USDT rate. Live INR price recalculates instantly.
+- **Add any coin:** Type in the search box → **Search** → **Add** to the selector.
+- **Historical prices:** Portfolio tab → Historical Price Lookup → enter CoinGecko coin ID + date → **Fetch Price**.
+- **Multi-profile:** Create separate profiles for family members or strategies — all data is profile-scoped.
+- **CSV import:** Use WazirX / CoinDCX export CSV directly; format is auto-detected.
+- **CA report:** Export encrypted JSON for your CA — they decrypt with the password you set.
+- **Offline:** Install the PWA ("Add to Home Screen") for offline access.
 
-### VDA Tax Rules (Section 115BBH)
-- 30% tax on profit from crypto sales
-- 4% Health & Education Cess on the tax amount
-- Surcharge based on income bracket (0%, 10%, 15%, 25%, 37%)
-- 1% TDS deducted at source (for transactions above threshold)
-- **No loss offset:** Crypto losses cannot be set off against other income
+---
 
-### Supported Scenarios
-- Short-term holdings (any duration)
-- Multiple transactions with FIFO or Average cost basis
-- Exchange fees and GST on fees
-- P2P premium pricing
-- Break-even analysis
-- Target-based selling
+## Privacy & Legal
 
-## Files Structure
-```
-Crypto-Calc/
-├── src/                    # Source files
-│   ├── script.js          # Main application logic
-│   ├── style.css          # Styling and themes
-│   └── sw.js              # Service Worker for PWA
-├── public/                # Static assets (copied to dist/)
-│   ├── manifest.json      # PWA manifest
-│   └── icons/             # App icons (SVG)
-├── dist/                  # Build output (generated by Vite)
-├── index.html             # Main app (root level)
-├── privacy.html           # Privacy Policy page
-├── terms.html             # Terms of Service page
-├── package.json           # Dependencies & scripts
-├── vite.config.js         # Vite build configuration
-├── netlify.toml           # Netlify deployment config
-├── vercel.json            # Vercel deployment config
-├── Dockerfile             # Docker container setup
-├── docker-compose.yml     # Docker Compose for local dev
-├── .eslintrc.json         # Code quality rules
-├── .prettierrc             # Code formatting config
-├── .env.example           # Environment variables template
-├── .github/workflows/     # CI/CD automation
-├── README.md              # This file
-├── TECH-STACK.md          # Tech stack & setup guide
-└── DEPLOYMENT.md          # Deployment & monetization
-```
+- ✅ All data stored in browser `localStorage` only — nothing sent to any server
+- ✅ API calls only to CoinGecko, Binance, open.er-api.com (price / FX data)
+- ✅ Privacy Policy included (`privacy.html`)
+- ✅ Terms of Service included (`terms.html`)
+- ✅ No personal data collected or transmitted
+- ✅ GDPR-friendly by design
 
-## Legal & Compliance
-- ✅ Privacy Policy included
-- ✅ Terms of Service included
-- ✅ Educational purpose disclaimer
-- ✅ GDPR-friendly (local storage only)
-- ✅ No personal data collection
+---
 
 ## Roadmap
 
-### Planned Features
-- [ ] Advanced charts (Capital gains over time)
-- [ ] Multi-year tax comparison
-- [ ] ITR form pre-filling helpers
-- [ ] Historical price data
-- [ ] Premium tier with PDF reports
-- [ ] Bulk import from exchange CSVs
-- [ ] Tax loss harvesting suggestions
-- [ ] Mobile app (React Native/Flutter)
+### Completed ✅
+- [x] Live price — CoinGecko / Binance / Manual
+- [x] Buy Mode — investment planner with fee & GST
+- [x] Sell Mode — full tax breakdown (surcharge, cess, TDS)
+- [x] Portfolio tracker — FIFO / Average cost
+- [x] Multi-user profiles
+- [x] Crypto-to-crypto swap recording
+- [x] Bulk CSV import (WazirX, CoinDCX, Binance, generic)
+- [x] Exchange API import (WazirX, CoinDCX)
+- [x] Tax loss harvesting planner
+- [x] Historical price lookup
+- [x] Schedule VDA (ITR) export
+- [x] CA report export (JSON, plain-text, AES-256 encrypted)
+- [x] Bank withdrawal tracker
+- [x] Staking / income tracker
+- [x] Derivatives (F&O) PnL calculator
+- [x] Compliance & Info guide (Section 194S / Form 26QE)
+- [x] Analytics charts (FY P/L, monthly capital gains)
+- [x] PWA offline support
+- [x] Dark mode
+
+### Planned 🛠️
+- [ ] PDF report generation
+- [ ] ITR form field-mapping helper
+- [ ] Multi-asset price refresh in Tax Loss Harvesting
+- [ ] Binance API import
+- [ ] Mobile app (React Native / Flutter)
+- [ ] Optional cloud sync (premium tier)
+
+---
 
 ## Contributing
-Contributions are welcome! Please:
+
 1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Submit a pull request
+2. Create a feature branch (`git checkout -b feat/my-feature`)
+3. Commit your changes (`git commit -m "feat: add something useful"`)
+4. Push and open a Pull Request
+
+Run `npm run lint` before submitting.
+
+---
 
 ## Support
-- Email: contact@cryptocalc.com
-- Issues: GitHub Issues
-- Discussions: GitHub Discussions
+
+- 📧 Email: contact@cryptocalc.com
+- 🐛 Issues: GitHub Issues
+- 💬 Discussions: GitHub Discussions
+
+---
 
 ## License
-MIT License - Feel free to use this for your own projects!
 
-## Disclaimer
-⚠️ **IMPORTANT:** This calculator is for educational purposes only and does not constitute financial, tax, or legal advice. Tax laws are complex and subject to change. Always consult with a qualified Chartered Accountant (CA) or tax professional before filing your taxes or making investment decisions.
-
-## Notes
-- CoinGecko free API has rate limits (handled gracefully with caching)
-- Binance API available as alternative price source
-- This is a simplified calculator intended for learning and rough estimates
-- Tax rules can change - verify current regulations
-- Always backup your transaction data
+MIT — free to use, modify, and distribute.
 
 ---
 
 **Made with ❤️ for the Indian Crypto Community**
 
-Star ⭐ this repo if you find it useful!
+⭐ Star this repo if it saves you tax-filing headaches!

@@ -1,10 +1,10 @@
-const CACHE_NAME = "crypto-calc-v1";
+const CACHE_NAME = "crypto-calc-v2";
 
 const ASSETS = [
   "./",
   "./index.html",
-  "./style.css",
-  "./script.js",
+  "./src/style.css",
+  "./src/script.js",
   "./manifest.json",
   "./icons/icon.svg",
   "./icons/icon-192.svg",

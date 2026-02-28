@@ -199,6 +199,7 @@ const clearWithdrawalsBtn = document.getElementById("clearWithdrawals");
 const exportWithdrawalsCsvBtn = document.getElementById("exportWithdrawalsCsv");
 const withdrawalTbodyEl = document.getElementById("withdrawalTbody");
 const totalWithdrawalFeesEl = document.getElementById("totalWithdrawalFees");
+const withdrawalMessageEl = document.getElementById("withdrawalMessage");
 
 let currentPrice = 0;
 let currentPriceUSD = 0;
@@ -555,10 +556,10 @@ const applyPreferences = () => {
     buyCoinSelect.value = prefs.coinId;
   }
 
-  if (prefs?.activeTab === "sell") {
-    activateTab("sell");
-  } else if (prefs?.activeTab === "portfolio") {
-    activateTab("portfolio");
+  const validTabs = ["buy", "sell", "portfolio", "staking", "derivatives", "compliance"];
+  const savedTab = prefs?.activeTab;
+  if (savedTab && validTabs.includes(savedTab)) {
+    activateTab(savedTab);
   } else {
     activateTab("buy");
   }
@@ -3216,9 +3217,11 @@ addWithdrawalBtn?.addEventListener("click", () => {
   const notes = withdrawalNotesInput?.value.trim() || "";
 
   if (!date || !bank || !Number.isFinite(amount) || amount <= 0 || !Number.isFinite(fee) || fee < 0) {
+    if (withdrawalMessageEl) withdrawalMessageEl.textContent = "Fill all required fields (date, bank, amount ≥ 0, fee ≥ 0).";
     showToast("Fill all required fields (date, bank, amount, fee).", "error");
     return;
   }
+  if (withdrawalMessageEl) withdrawalMessageEl.textContent = "";
 
   const data = loadWithdrawals();
   data.withdrawals = Array.isArray(data.withdrawals) ? data.withdrawals : [];
