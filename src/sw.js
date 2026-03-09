@@ -3,8 +3,6 @@ const CACHE_NAME = "crypto-calc-v2";
 const ASSETS = [
   "./",
   "./index.html",
-  "./src/style.css",
-  "./src/script.js",
   "./manifest.json",
   "./icons/icon.svg",
   "./icons/icon-192.svg",
